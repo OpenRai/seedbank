@@ -1,0 +1,522 @@
+import { useEffect, useMemo, useState } from 'react';
+import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, coverageFraction, formatBigIntCompact } from '@lib/keyspace';
+import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
+import { useKeyspace } from '@hooks/useKeyspace';
+import { useAccountStates } from '@hooks/useAccountStates';
+import { ResultsTable } from '@components/ResultsTable';
+import {
+  CoinsIcon,
+  DiceIcon,
+  FirstIcon,
+  InfoIcon,
+  KeyIcon,
+  LastIcon,
+  NextIcon,
+  PrevIcon,
+  RefreshIcon,
+  SearchIcon,
+  SeedIcon,
+  WarningIcon,
+} from '@components/Icons';
+import { formatXno, sumRaw } from '@lib/format';
+
+const initial = readUrlState(window.location.search);
+
+/** Thin veil over crypto.getRandomValues for uniform random page sampling. */
+function sampleRandomPage(maxPage: bigint): bigint {
+  if (maxPage <= 1n) return 1n;
+  const bitWidth = maxPage.toString(2).length;
+  const byteLength = Math.ceil(bitWidth / 8);
+  const range = 1n << BigInt(byteLength * 8);
+  const limit = range - (range % maxPage);
+  const buffer = new Uint8Array(byteLength);
+  for (let attempt = 0; attempt < 32; attempt++) {
+    crypto.getRandomValues(buffer);
+    let value = 0n;
+    for (const byte of buffer) value = (value << 8n) | BigInt(byte);
+    if (value < limit) return (value % maxPage) + 1n;
+  }
+  return 1n;
+}
+
+export function App() {
+  const [kind, setKind] = useState<SeedKind>(initial.kind ?? 'privateKey');
+  const [page, setPage] = useState<bigint>(initial.page ?? 1n);
+  const [options, setOptions] = useState(initial.options ?? DEFAULT_OPTIONS);
+  const [accountIndex, setAccountIndex] = useState(initial.accountIndex ?? 0);
+  const [accountInput, setAccountInput] = useState(String(initial.accountIndex ?? 0));
+  const [pageInput, setPageInput] = useState((initial.page ?? 1n).toString());
+  const [pending, setPending] = useState(false);
+
+  const effectiveOptions = useMemo(
+    () => (kind === 'mnemonic' ? options : DEFAULT_OPTIONS),
+    [kind, options],
+  );
+
+  const methodMeta = kind === 'mnemonic' ? METHOD_META[effectiveOptions.method] : null;
+
+  /**
+   * Account index bounds, by derivation method:
+   *  - SLIP-0010 hardened path segments reserve the top bit, so 2^31-1.
+   *  - The traditional Nano seed rule takes a full uint32.
+   */
+  const accountMax = methodMeta?.accountMax ?? 0x7fffffff;
+
+  function commitAccountIndex(next: number) {
+    const clamped = Math.min(accountMax, Math.max(0, Math.trunc(next)));
+    setAccountIndex(clamped);
+    setAccountInput(String(clamped));
+  }
+
+  /** Free typing is allowed; only valid in-range digits change the index. */
+  function onAccountInputChange(raw: string) {
+    setAccountInput(raw);
+    if (!/^\d+$/.test(raw)) return;
+    const value = Number(raw);
+    if (Number.isSafeInteger(value) && value <= accountMax) setAccountIndex(value);
+  }
+
+  /** Blur/Enter normalises the field back onto a valid, clamped value. */
+  function normaliseAccountInput() {
+    const parsed = /^\d+$/.test(accountInput) ? Number(accountInput) : accountIndex;
+    commitAccountIndex(Number.isSafeInteger(parsed) ? parsed : accountIndex);
+  }
+
+  const {
+    rows,
+    deriving,
+    error: deriveError,
+    pages,
+    info,
+    parsePageInput,
+    clampPage,
+    isFirst,
+    isLast,
+  } = useKeyspace({ kind, options: effectiveOptions, page, accountIndex });
+
+  const addresses = useMemo(() => rows.map((row) => row.address), [rows]);
+  const { states, loading, error: stateError, degraded, refresh } = useAccountStates(addresses);
+
+  /* Keep the URL in sync so any page is shareable and reproducible. */
+  useEffect(() => {
+    replaceUrl({ kind, page, options: effectiveOptions, accountIndex });
+  }, [kind, page, effectiveOptions, accountIndex]);
+
+  useEffect(() => {
+    setPageInput(page.toString());
+  }, [page]);
+
+  /* Switching derivation method can shrink the permitted index range. */
+  useEffect(() => {
+    if (accountIndex > accountMax) commitAccountIndex(accountMax);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountMax]);
+
+  const totals = useMemo(() => {
+    const balance = sumRaw(rows.map((row) => states.get(row.address)?.balanceRaw ?? '0'));
+    const receivable = sumRaw(
+      rows
+        .filter((row) => !(states.get(row.address)?.opened ?? false))
+        .map((row) => states.get(row.address)?.receivableRaw ?? '0'),
+    );
+    const opened = rows.filter((row) => states.get(row.address)?.opened).length;
+    const funded = rows.filter((row) => states.get(row.address)?.balanceRaw && states.get(row.address)!.balanceRaw !== '0').length;
+    return { balance, receivable, opened, funded };
+  }, [rows, states]);
+
+  function go(next: bigint) {
+    const clamped = clampPage(next, pages);
+    setPending(true);
+    setPage(clamped);
+    setPageInput(clamped.toString());
+    window.setTimeout(() => setPending(false), 0);
+  }
+
+  function jump() {
+    const parsed = parsePageInput(pageInput);
+    if (parsed === null) {
+      setPageInput(page.toString());
+      return;
+    }
+    go(parsed);
+  }
+
+  return (
+    <div className="app">
+      <header className="site-header">
+        <div className="container site-header__inner">
+          <a className="brand" href="/">
+            <span className="brand__mark" aria-hidden="true">
+              <KeyIcon width={16} height={16} />
+            </span>
+            Nano<span className="brand__accent">Seeds</span>
+          </a>
+          <nav className="site-nav" aria-label="Keyspace view">
+            <button
+              type="button"
+              className={`site-nav__link${kind === 'privateKey' ? ' site-nav__link--active' : ''}`}
+              onClick={() => {
+                setKind('privateKey');
+                go(1n);
+              }}
+            >
+              Private keys
+            </button>
+            <button
+              type="button"
+              className={`site-nav__link${kind === 'mnemonic' ? ' site-nav__link--active' : ''}`}
+              onClick={() => {
+                setKind('mnemonic');
+                go(1n);
+              }}
+            >
+              Mnemonic seeds
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="container main">
+        <section className="card">
+          <div className="card__body summary">
+            <span className="summary__icon" aria-hidden="true">
+              {kind === 'privateKey' ? <KeyIcon width={20} height={20} /> : <SeedIcon width={20} height={20} />}
+            </span>
+            <div className="summary__text">
+              <h1 className="summary__title">
+                Nano {kind === 'privateKey' ? 'private keys' : 'mnemonic seeds'} page{' '}
+                <strong>#{formatBigIntCompact(page)}</strong> out of <strong>#{info.pagesDisplay}</strong> (
+                <span title={`One page covers ${coverageFraction(kind, effectiveOptions)} of the keyspace`}>
+                  {info.coverageDisplay}
+                </span>
+                )
+              </h1>
+              <div className="summary__progress">
+                <span className="summary__progress-value">{info.coverageDisplay}</span>
+              </div>
+              <div className="summary__meta">
+                Showing {PAGE_SIZE} {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · derived in your
+                browser at view-time · page {formatBigIntCompact(page)} starts at position{' '}
+                {formatBigIntCompact((page - 1n) * BigInt(PAGE_SIZE))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="card__section controls__row">
+            <button type="button" className="btn" onClick={() => go(1n)} disabled={isFirst || pending}>
+              <FirstIcon width={15} height={15} /> First
+            </button>
+            <button type="button" className="btn" onClick={() => go(page - 1n)} disabled={isFirst || pending}>
+              <PrevIcon width={15} height={15} /> Previous
+            </button>
+            <button
+              type="button"
+              className="btn btn--dice"
+              onClick={() => go(sampleRandomPage(pages))}
+              disabled={pending}
+            >
+              <DiceIcon width={15} height={15} /> Random
+            </button>
+            <button type="button" className="btn" onClick={() => go(page + 1n)} disabled={isLast || pending}>
+              Next <NextIcon width={15} height={15} />
+            </button>
+            <button type="button" className="btn" onClick={() => go(pages)} disabled={isLast || pending}>
+              Last <LastIcon width={15} height={15} />
+            </button>
+          </div>
+
+          <div className="card__section controls__row">
+            <div className="page-field" style={{ flex: 1 }}>
+              <label htmlFor="page-input">Page:</label>
+              <input
+                id="page-input"
+                className="input input--page"
+                value={pageInput}
+                onChange={(event) => setPageInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') jump();
+                }}
+                inputMode="numeric"
+                spellCheck={false}
+                aria-label="Page number"
+              />
+            </div>
+            <button type="button" className="btn btn--primary" onClick={jump} disabled={pending}>
+              <SearchIcon width={15} height={15} /> Jump
+            </button>
+            <div className="toolbar-right">
+              <button
+                type="button"
+                className="btn btn--icon"
+                onClick={refresh}
+                disabled={loading || rows.length === 0}
+                title="Re-request balances (cached entries are served until they expire)"
+              >
+                <RefreshIcon width={15} height={15} /> Refresh balances
+              </button>
+            </div>
+          </div>
+
+          {kind === 'mnemonic' ? (
+            <div className="card__section">
+              <div className="settings__grid">
+                <div className="field">
+                  <label className="field__label" htmlFor="word-count">
+                    Word count
+                  </label>
+                  <select
+                    id="word-count"
+                    className="select"
+                    value={options.wordCount}
+                    onChange={(event) => {
+                      const wordCount = Number(event.target.value) as 12 | 24;
+                      setOptions((current) => ({
+                        ...current,
+                        wordCount,
+                        method: methodForWordCount(wordCount, current.method),
+                      }));
+                    }}
+                  >
+                    {([12, 24] as const).map((wc) => (
+                      <option
+                        key={wc}
+                        value={wc}
+                        disabled={methodMeta ? !methodMeta.wordCounts.includes(wc) : false}
+                      >
+                        {wc} words ({wc === 12 ? '128' : '256'} bits)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label className="field__label" htmlFor="method">
+                    Derivation method
+                  </label>
+                  <select
+                    id="method"
+                    className="select"
+                    value={options.method}
+                    onChange={(event) => {
+                      const method = event.target.value as MnemonicMethod;
+                      setOptions((current) => ({
+                        ...current,
+                        method,
+                        wordCount: METHOD_META[method].wordCounts.includes(current.wordCount)
+                          ? current.wordCount
+                          : (METHOD_META[method].wordCounts[0] as 12 | 24),
+                      }));
+                    }}
+                  >
+                    {Object.values(METHOD_META).map((meta) => (
+                      <option
+                        key={meta.method}
+                        value={meta.method}
+                        disabled={!meta.wordCounts.includes(options.wordCount)}
+                      >
+                        {meta.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label className="field__label" htmlFor="passphrase">
+                    BIP39 passphrase
+                    {methodMeta && !methodMeta.passphrase ? (
+                      <span className="field__hint" style={{ marginLeft: 8 }}>
+                        unused by this method
+                      </span>
+                    ) : null}
+                  </label>
+                  <input
+                    id="passphrase"
+                    className="input"
+                    type="text"
+                    spellCheck={false}
+                    autoComplete="off"
+                    placeholder={methodMeta && !methodMeta.passphrase ? 'n/a for this method' : 'optional 25th word'}
+                    value={options.passphrase ?? ''}
+                    onChange={(event) =>
+                      setOptions((current) => ({ ...current, passphrase: event.target.value || undefined }))
+                    }
+                  />
+                </div>
+
+                <div className="field">
+                  <label className="field__label" htmlFor="account">
+                    Account index
+                  </label>
+                  <div className="stepper">
+                    <button
+                      type="button"
+                      className="stepper__btn"
+                      onClick={() => commitAccountIndex(accountIndex - 1)}
+                      disabled={accountIndex <= 0}
+                      aria-label="Previous account index"
+                      title="Decrease account index"
+                    >
+                      <PrevIcon width={13} height={13} />
+                    </button>
+                    <span className="stepper__field">
+                      <span className="stepper__prefix" aria-hidden="true">
+                        #
+                      </span>
+                      <input
+                        id="account"
+                        className="input stepper__input"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        spellCheck={false}
+                        value={accountInput}
+                        onChange={(event) => onAccountInputChange(event.target.value)}
+                        onBlur={normaliseAccountInput}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') normaliseAccountInput();
+                          if (event.key === 'ArrowUp') {
+                            event.preventDefault();
+                            commitAccountIndex(accountIndex + 1);
+                          }
+                          if (event.key === 'ArrowDown') {
+                            event.preventDefault();
+                            commitAccountIndex(accountIndex - 1);
+                          }
+                        }}
+                        aria-describedby="account-range"
+                      />
+                    </span>
+                    <button
+                      type="button"
+                      className="stepper__btn"
+                      onClick={() => commitAccountIndex(accountIndex + 1)}
+                      disabled={accountIndex >= accountMax}
+                      aria-label="Next account index"
+                      title="Increase account index"
+                    >
+                      <NextIcon width={13} height={13} />
+                    </button>
+                  </div>
+                  <span className="field__hint" id="account-range">
+                    0 – {accountMax.toLocaleString('en-US')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="settings__paths">
+                <span className="chip chip--label">Derivation</span>
+                {methodMeta ? (
+                  <>
+                    <span className="chip chip--active">
+                      {methodMeta.supportsSubaccounts
+                        ? methodFormula(effectiveOptions.method, accountIndex)
+                        : methodMeta.label}
+                    </span>
+                    <span
+                      className={`chip${methodMeta.supportsSubaccounts ? ' chip--active' : ' chip--disabled'}`}
+                      title={methodMeta.supportsSubaccounts
+                        ? `Each phrase yields ${methodMeta.accountMax.toLocaleString('en-US')}+1 subaccounts`
+                        : 'This method derives a single key per phrase'}
+                    >
+                      {methodMeta.supportsSubaccounts
+                        ? `${(methodMeta.accountMax + 1).toLocaleString('en-US')} subaccounts`
+                        : 'single key'}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </section>
+
+        <section className="stats">
+          <div className="stat">
+            <div className="stat__label stat__label--balance">
+              <CoinsIcon width={13} height={13} /> Total balance
+            </div>
+            <div className="stat__value stat__value--balance">
+              {formatXno(totals.balance)}
+              <span className="stat__suffix">XNO</span>
+            </div>
+            <div className="stat__hint">
+              {totals.funded} of {rows.length} entries funded on this page
+            </div>
+          </div>
+          <div className="stat">
+            <div className="stat__label stat__label--opened">
+              <KeyIcon width={13} height={13} /> Opened accounts
+            </div>
+            <div className="stat__value stat__value--opened">
+              {totals.opened}
+              <span className="stat__suffix">/ {rows.length || PAGE_SIZE}</span>
+            </div>
+            <div className="stat__hint">Accounts with at least one block on the ledger</div>
+          </div>
+          <div className="stat">
+            <div className="stat__label stat__label--receivable">
+              <CoinsIcon width={13} height={13} /> Receivable
+            </div>
+            <div className="stat__value stat__value--balance">
+              {formatXno(totals.receivable)}
+              <span className="stat__suffix">XNO</span>
+            </div>
+            <div className="stat__hint">Pending on unopened accounts (not spendable)</div>
+          </div>
+        </section>
+
+        {deriveError ? (
+          <div className="banner banner--error">
+            <WarningIcon width={16} height={16} /> Derivation failed: {deriveError}
+          </div>
+        ) : null}
+
+        {stateError ? (
+          <div className="banner banner--warn">
+            <WarningIcon width={16} height={16} /> Balance lookup failed: {stateError}. Keys below are still derived
+            locally.
+          </div>
+        ) : null}
+
+        {degraded && !stateError ? (
+          <div className="banner banner--warn">
+            <WarningIcon width={16} height={16} /> Upstream RPC nodes were unreachable; showing last known cached
+            balances.
+          </div>
+        ) : null}
+
+        <ResultsTable kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
+
+        <section className="notice-list">
+          <div className="banner banner--info">
+            <InfoIcon width={16} height={16} /> Balances are proxied through this site to public Nano RPC nodes and
+            cached for up to {Math.round(3_600_000 / 60_000)} minutes. Private keys and mnemonics are never sent
+            anywhere — they exist only in this browser tab.
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="container site-footer__grid">
+          <div>
+            <strong>About NanoSeeds</strong>
+            <p style={{ margin: '6px 0 0' }}>
+              A deterministic browser over the Nano keyspace. Every private key and seed phrase is derived at view-time
+              from its position in the 2<sup>256</sup> range — nothing is stored, indexed, or pregenerated.
+            </p>
+          </div>
+          <div>
+            <strong>Derivation notes</strong>
+            <ul className="footer-list">
+              <li>Public key: ED25519 with BLAKE2b-512, as used by the Nano protocol</li>
+              <li>Nano seed: privateKey[i] = BLAKE2b-256(seed ‖ uint32BE(i))</li>
+              <li>BIP39: SLIP-0010 ed25519, hardened path m/44'/165'/i'</li>
+            </ul>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

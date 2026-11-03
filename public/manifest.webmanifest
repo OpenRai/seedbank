@@ -1,0 +1,10 @@
+{
+  "name": "NanoSeeds",
+  "short_name": "NanoSeeds",
+  "description": "Nano keyspace explorer — browse any pageful of Nano private keys or mnemonic seeds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#209ce9",
+  "icons": []
+}

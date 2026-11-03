@@ -1,0 +1,54 @@
+# ---------------------------------------------------------------------------
+# NanoSeeds — gitignore
+#
+# Node 26 + Vite + TypeScript stack. The only runtime state that should ever
+# live in the repo is source; everything else is generated, cached, or
+# environment-specific.
+# ---------------------------------------------------------------------------
+
+# --- Dependencies ----------------------------------------------------------
+node_modules/
+
+# --- Build output ----------------------------------------------------------
+dist/
+build/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# --- Vite / tooling caches -------------------------------------------------
+.vite/
+.cache/
+coverage/
+*.lcov
+
+# --- Runtime data ----------------------------------------------------------
+# SQLite balance cache, created by the server at startup.
+data/
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Environment & secrets -------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# --- Logs ------------------------------------------------------------------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Test artefacts --------------------------------------------------------
+test-results/
+playwright-report/
+playwright/.cache/
+agent-browser-state/
