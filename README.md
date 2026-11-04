@@ -19,7 +19,7 @@ Two views, both with First / Previous / Random / Next / Last and a page jump:
 Nothing else. There is no key converter, no seed scanner, and no wallet.
 
 Every page is shareable: `?view=mnemonics&page=42&words=24&method=legacy`
-reproduces exactly the same twenty accounts.
+reproduces the same twenty accounts when no passphrase is used. Passphrases stay in the tab, are excluded from links, and must be re-entered after reload.
 
 ## Derivation methods
 
@@ -142,6 +142,7 @@ mnemonics never leave the browser tab.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `PORT` | `8787` | Listen port |
+| `TRUST_PROXY` | unset (disabled) | Comma-separated trusted proxy IPs or CIDRs; configure only for your deployment proxy |
 | `HOST` | `0.0.0.0` | Listen address |
 | `CACHE_DB` | `./data/cache.sqlite` | SQLite file path |
 | `CACHE_TTL_MS` | `3600000` | Cache lifetime (1 hour) |
@@ -174,3 +175,15 @@ Seeing a private key on this site does not give anyone access to funds that are
 not already theirs; every 256-bit value exists whether or not this page renders
 it. The real advice is the opposite one: never paste a seed you actually use
 into a website, including this one.
+
+## GitHub Pages
+
+The static frontend is published from `main` by `.github/workflows/pages.yml`.
+GitHub Pages serves the site at `https://seedbank.openrai.org`; the repository
+contains the matching `public/CNAME` file. DNS for `seedbank.openrai.org` must
+point to GitHub Pages.
+
+GitHub Pages only hosts the static frontend. Balance lookups require the
+Express API in `server/`, which must be hosted separately and made available at
+`/api` on the site origin (or the client API URL must be configured for the
+chosen backend host).
