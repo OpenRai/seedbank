@@ -22,6 +22,11 @@ import { formatXno, sumRaw } from '@lib/format';
 
 const initial = readUrlState(window.location.search);
 
+/** Compact word-count support hint shown next to each derivation method. */
+function wordCountSupportLabel(wordCounts: readonly (12 | 24)[]): string {
+  return wordCounts.length === 1 ? `${wordCounts[0]} words only` : `${wordCounts.join('/')} words`;
+}
+
 /** Thin veil over crypto.getRandomValues for uniform random page sampling. */
 function sampleRandomPage(maxPage: bigint): bigint {
   if (maxPage <= 1n) return 1n;
@@ -306,7 +311,7 @@ export function App() {
                   >
                     {Object.values(METHOD_META).map((meta) => (
                       <option key={meta.method} value={meta.method}>
-                        {meta.label}
+                        {meta.label} · {wordCountSupportLabel(meta.wordCounts)}
                       </option>
                     ))}
                   </select>
