@@ -24,25 +24,25 @@
   /* Canvas */
   --bg: #f5f5f5;
   --surface: #ffffff;
-  --surface-muted: #f4faff;
+  --surface-muted: #f6f8fb;
   --surface-sunken: #eef1f6;
   --border: #e5e8ee;
   --border-strong: #d3d8e0;
 
   /* Ink */
-  --text: #0e1730;
+  --text: #14181f;
   --text-soft: #3c4552;
   --text-muted: #66707f;
   --text-faint: #939cab;
 
-  /* Brand: Nano Blue for accents, a darker action blue for white labels. */
-  --primary: #1478b8;
-  --primary-strong: #132042;
-  --primary-soft: #e5f3fc;
-  --primary-line: #a8d6f2;
+  /* Brand */
+  --primary: #005cda;
+  --primary-strong: #003cac;
+  --primary-soft: #e5f0fc;
+  --primary-line: #abd0f5;
 
-  --nano: #209ce9;
-  --nano-deep: #132042;
+  --nano: #4a90d9;
+  --nano-deep: #1f5f9e;
 
   --amber: #e08a12;
   --amber-soft: #fcf1de;
@@ -159,7 +159,7 @@ button {
   align-items: center;
   gap: 9px;
   font-weight: 700;
-  font-size: 19px;
+  font-size: 18px;
   letter-spacing: -0.02em;
   color: var(--text);
 }
@@ -172,16 +172,16 @@ button {
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: linear-gradient(140deg, var(--nano), var(--primary));
+  background: linear-gradient(140deg, #33a2f0, #1f6fd0);
   display: grid;
   place-items: center;
   color: #fff;
   flex: 0 0 auto;
-  box-shadow: 0 1px 2px rgba(20, 120, 184, 0.35);
+  box-shadow: 0 1px 2px rgba(31, 111, 208, 0.35);
 }
 
 .brand__accent {
-  color: var(--nano);
+  color: var(--primary);
 }
 
 .site-nav {
@@ -303,8 +303,8 @@ button {
   overflow: hidden;
   background: repeating-linear-gradient(
     115deg,
-    #1478b8 0 9px,
-    #096ca8 9px 18px
+    #1f6fd0 0 9px,
+    #2f86e8 9px 18px
   );
   display: grid;
   place-items: center;
@@ -374,7 +374,7 @@ button {
   border-color: var(--primary);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(20, 120, 184, 0.3);
+  box-shadow: 0 1px 2px rgba(31, 111, 208, 0.3);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -1173,7 +1173,7 @@ button.chip:hover {
 .summary__progress-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  background: repeating-linear-gradient(45deg, #1478b8 0 9px, #096ca8 9px 18px);
+  background: repeating-linear-gradient(45deg, #1f6fd0 0 9px, #2f86e8 9px 18px);
   border-radius: inherit;
 }
 .summary__progress-value {
