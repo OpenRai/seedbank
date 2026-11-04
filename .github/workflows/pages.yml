@@ -25,6 +25,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_LOOKUPS: ${{ vars.VITE_LOOKUPS || 'nano-rpc' }}
+          VITE_NANO_RPC_URLS: ${{ vars.VITE_NANO_RPC_URLS }}
+          VITE_JSON_RPC_URL: ${{ vars.VITE_JSON_RPC_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

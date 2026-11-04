@@ -17,6 +17,8 @@ import {
 } from './nano';
 import { entropyToMnemonic } from './mnemonic';
 import { bip39Seed } from './seed';
+import { pageStartPosition } from './navigation';
+export { pageStartPosition } from './navigation';
 import {
   PAGE_SIZE,
   type DerivedRow,
@@ -24,7 +26,8 @@ import {
   type MnemonicOptions,
   type SeedKind,
   entryBitsFor,
-  positionModulo,
+  totalEntries,
+  METHOD_META,
   totalPages,
 } from './keyspace';
 
@@ -89,18 +92,21 @@ function privateKeyRow(position: bigint, value: bigint): DerivedRow {
 export async function derivePage(request: DerivePageRequest): Promise<DerivedRow[]> {
   const { kind, options } = request;
   const bits = entryBitsFor(kind, options);
-  const perPage = (BigInt(1) << BigInt(bits)) < BigInt(PAGE_SIZE) ? 1 : PAGE_SIZE;
   const pages = totalPages(kind, options);
   if (request.page < 1n || request.page > pages) throw new Error('Page out of range');
 
-  const start = (request.page - 1n) * BigInt(perPage);
-  const modulus = positionModulo(kind, options) + 1n;
+  const start = pageStartPosition(request.page);
+  const remaining = totalEntries(kind, options) - start;
+  const perPage = remaining < BigInt(PAGE_SIZE) ? Number(remaining) : PAGE_SIZE;
   const accountIndex = request.accountIndex ?? 0;
+  if (kind === 'mnemonic' && (!Number.isInteger(accountIndex) || accountIndex < 0 || accountIndex > METHOD_META[options.method].accountMax)) {
+    throw new Error('Account index out of range');
+  }
 
   if (kind === 'privateKey') {
     const rows: DerivedRow[] = [];
     for (let i = 0; i < perPage; i++) {
-      const position = (start + BigInt(i)) % modulus;
+      const position = start + BigInt(i);
       rows.push(privateKeyRow(position, position & ((1n << 256n) - 1n)));
     }
     return rows;
@@ -108,7 +114,7 @@ export async function derivePage(request: DerivePageRequest): Promise<DerivedRow
 
   const rows: DerivedRow[] = [];
   for (let i = 0; i < perPage; i++) {
-    const position = (start + BigInt(i)) % modulus;
+    const position = start + BigInt(i);
     const mask = bits === 128 ? (1n << 128n) - 1n : (1n << 256n) - 1n;
     const entropy = bigIntToFixedBytes(position & mask, bits / 8);
     const mnemonic = entropyToMnemonic(entropy);
@@ -149,11 +155,6 @@ export async function derivePage(request: DerivePageRequest): Promise<DerivedRow
     });
   }
   return rows;
-}
-
-/** The position of the first entry of a page, used for display. */
-export function pageStartPosition(page: bigint): bigint {
-  return (page - 1n) * BigInt(PAGE_SIZE);
 }
 
 /**

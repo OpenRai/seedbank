@@ -58,3 +58,34 @@ test('shared links exclude passphrases', async () => {
   assert.equal(query.includes('passphrase'), false);
   assert.equal(readUrlState(query).page, 42n);
 });
+
+test('shareable page and account indices round-trip without floating point loss', async () => {
+  const { writeUrlState }=await import('../src/lib/urlState.ts');
+  for(const method of ['bip39Ledger','bip39Account','legacyNano','bip39Seed'] as const){
+    for(const wordCount of [12,24] as const){
+      if(method==='legacyNano' && wordCount===12)continue;
+      const state={kind:'mnemonic' as const,page:9007199254740993n,options:{wordCount,method},accountIndex:method.startsWith('bip39') && method!=='bip39Seed'?0x7fffffff:0xffffffff};
+      assert.deepEqual(readUrlState(writeUrlState(state)),state);
+    }
+  }
+});
+
+test('URL rewrites preserve debug lookup selection while excluding passphrases', async()=>{
+  const {replaceUrl}=await import('../src/lib/urlState.ts');
+  const original=Object.getOwnPropertyDescriptor(globalThis,'window');
+  let written='';
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{
+    location:{pathname:'/',search:'?lookups=json-rpc&page=1'},
+    history:{replaceState(_state:unknown,_title:string,url:string){written=url;}},
+  }});
+  try{
+    replaceUrl({kind:'mnemonic',page:2n,options:{wordCount:24,method:'bip39Ledger',passphrase:'secret'},accountIndex:0});
+    const params=new URL(written,'https://example.test').searchParams;
+    assert.equal(params.get('lookups'),'json-rpc');
+    assert.equal(params.get('page'),'2');
+    assert.equal(params.has('passphrase'),false);
+  }finally{
+    if(original)Object.defineProperty(globalThis,'window',original);
+    else Reflect.deleteProperty(globalThis,'window');
+  }
+});

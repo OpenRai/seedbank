@@ -1,10 +1,8 @@
 /**
  * Page-based keyspace model.
  *
- * The total keyspace is treated as one enormous integer range. A whole number
- * of pages of `PAGE_SIZE` entries is laid out on that range, and page `p`
- * covers the 2^(PAGE_SIZE * ENTRY_BITS) values starting at p * count. Every
- * entry is derived deterministically at view-time — nothing is pregenerated.
+ * Pages are one-based; entry positions are zero-based. Page p starts at
+ * (p - 1) * PAGE_SIZE. The final page contains any remaining entries.
  *
  * Private key pages enumerate 256-bit integers directly.
  * Mnemonic pages enumerate their underlying entropy pools (128 or 256 bits).
@@ -147,7 +145,8 @@ export function totalEntries(kind: SeedKind, options: MnemonicOptions): bigint {
 }
 
 export function totalPages(kind: SeedKind, options: MnemonicOptions): bigint {
-  return totalEntries(kind, options) / BigInt(PAGE_SIZE);
+  const count = totalEntries(kind, options);
+  return (count + BigInt(PAGE_SIZE) - 1n) / BigInt(PAGE_SIZE);
 }
 
 export interface PageInfo {

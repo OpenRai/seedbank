@@ -115,7 +115,7 @@ function ResultRow({
             <ExternalIcon width={15} height={15} />
           </a>
         </div>
-        <div className="path keybox"><span>public key {row.publicKeyHex.toUpperCase()}</span><CopyButton value={row.publicKeyHex.toUpperCase()} label="public key" /></div>
+        <div className="path">public key {row.publicKeyHex.toUpperCase()}</div>
       </div>
 
       <BalanceCell state={state} loading={loading} />

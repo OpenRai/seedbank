@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [react()],
+  // Keep SQLite's WASM URL relative to its module during development.
+  optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
   resolve: {
     alias: {
       '@lib': fileURLToPath(new URL('./src/lib', import.meta.url)),

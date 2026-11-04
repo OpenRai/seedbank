@@ -68,6 +68,9 @@ export function writeUrlState(state: KeyspaceUrlState): string {
 }
 
 export function replaceUrl(state: KeyspaceUrlState): void {
-  const next = `${window.location.pathname}${writeUrlState(state)}`;
+  const params = new URLSearchParams(writeUrlState(state));
+  const lookups = new URLSearchParams(window.location.search).get('lookups');
+  if (lookups) params.set('lookups', lookups);
+  const next = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState(null, '', next);
 }

@@ -4,15 +4,15 @@
 
 Browse any pageful of Nano private keys or mnemonic seeds. Every value is
 derived at view-time from its position in the 2^256 keyspace; nothing is
-pregenerated, indexed, or stored. Balances are the only thing fetched from the
-network, proxied through this server and cached in SQLite for an hour.
+pregenerated, indexed, or stored. Balances are fetched through the selected lookup provider: directly from public
+RPC endpoints or through the local proxy. Both paths cache account state for an hour.
 
 ## What it does
 
 Two views, both with First / Previous / Random / Next / Last and a page jump:
 
 - **Private keys** — page `p` covers 256-bit integers `(p-1)*20 .. (p-1)*20+19`.
-  Each is turned into an ED25519 account and a `nano_` address.
+  The final page contains the remaining 16 entries. Each is turned into an ED25519 account and a `nano_` address.
 - **Mnemonic seeds** — the same idea over BIP39 entropy pools, with a word
   count (12/24), a derivation method, and an account index.
 
@@ -73,7 +73,7 @@ npm run dev      # terminal 2
 Run the tests:
 
 ```bash
-npm test         # 27 tests: derivation vectors + cache/RPC behaviour
+npm test         # derivation, navigation, providers, cache policy, and SQLite invariants
 ```
 
 ## Server API
@@ -183,7 +183,50 @@ GitHub Pages serves the site at `https://seedbank.openrai.org`; the repository
 contains the matching `public/CNAME` file. DNS for `seedbank.openrai.org` must
 point to GitHub Pages.
 
-GitHub Pages only hosts the static frontend. Balance lookups require the
-Express API in `server/`, which must be hosted separately and made available at
-`/api` on the site origin (or the client API URL must be configured for the
-chosen backend host).
+GitHub Pages only hosts the static frontend. The `proxy` lookup strategy requires the
+Express API in `server/` to be hosted separately at `/api` on the site origin.
+The Pages build uses direct browser lookups by default (see below).
+
+
+## Balance lookup strategies
+
+Set `VITE_LOOKUPS` when building to select `proxy` (the local default),
+`nano-rpc`, or `json-rpc`. Override that default for a browser session with
+`?lookups=nano-rpc`, `?lookups=proxy`, or `?lookups=json-rpc`. The override is
+preserved in page links. Unknown URL values fall back to the build default.
+
+- `proxy` calls the existing `/api/account-state` endpoint, with its server cache.
+- `nano-rpc` calls public Nano nodes from the browser with `accounts_balances`
+  and `accounts_frontiers`, retaining endpoint failover and response validation.
+  Set `VITE_NANO_RPC_URLS` to override the default nodes with a comma-separated list.
+- `json-rpc` calls the same batch methods using JSON-RPC 2.0 envelopes. Set
+  `VITE_JSON_RPC_URL` to the public gateway's full `/rpc` URL.
+
+Direct browser strategies require endpoints that allow browser CORS requests;
+both use a persistent browser cache when OPFS is available. Only account addresses are sent. Frontend build
+variables are public and must not contain credentials.
+
+The Pages workflow defaults to `nano-rpc`. Repository Actions variables
+`VITE_LOOKUPS`, `VITE_NANO_RPC_URLS`, and `VITE_JSON_RPC_URL` override its build
+settings; rebuilding is required after changing them.
+
+
+## Browser balance cache
+
+The two direct RPC providers share an account cache backed by
+`@sqlite.org/sqlite-wasm` in a Web Worker and the browser's Origin Private File
+System (OPFS). The `opfs-sahpool` backend works without COOP/COEP headers.
+Database access is coordinated across tabs with Web Locks; each operation
+closes its database and pauses the VFS to release the file handles.
+
+Like the proxy, the browser cache keeps balances fresh for one hour and retains
+old values for up to 24 hours. Only an unsuccessful refresh marks a returned
+value as `Cached`. Failed lookups without a usable previous value return
+unknown fields, displayed as dashes and `RPC Error`. Concurrent requests within
+a tab share account lookups. At most 10,000 accounts are retained.
+
+The cache stores only public account addresses, raw balances, opened state,
+and timestamps. It is local to the browser profile and origin, survives normal
+reloads, and can be removed by clearing site data. Browser storage is optional:
+if OPFS, Web Locks, or the worker fails, lookups continue using a bounded
+in-memory cache. The `proxy` provider continues to use the server's cache.

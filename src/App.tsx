@@ -1,3 +1,5 @@
+import { clampPage as normalizePage, clampAccountIndex, pageStartPosition, pageForPosition, privateKeyPosition, pageLocationPercent } from '@lib/navigation';
+import { randomPage } from '@lib/derivePage';
 import { useEffect, useMemo, useState } from 'react';
 import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigInt, totalPages } from '@lib/keyspace';
 import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
@@ -25,23 +27,6 @@ function wordCountSupportLabel(wordCounts: readonly (12 | 24)[]): string {
   return wordCounts.length === 1 ? `${wordCounts[0]} words only` : `${wordCounts.join('/')} words`;
 }
 
-/** Thin veil over crypto.getRandomValues for uniform random page sampling. */
-function sampleRandomPage(maxPage: bigint): bigint {
-  if (maxPage <= 1n) return 1n;
-  const bitWidth = maxPage.toString(2).length;
-  const byteLength = Math.ceil(bitWidth / 8);
-  const range = 1n << BigInt(byteLength * 8);
-  const limit = range - (range % maxPage);
-  const buffer = new Uint8Array(byteLength);
-  for (let attempt = 0; attempt < 32; attempt++) {
-    crypto.getRandomValues(buffer);
-    let value = 0n;
-    for (const byte of buffer) value = (value << 8n) | BigInt(byte);
-    if (value < limit) return (value % maxPage) + 1n;
-  }
-  return 1n;
-}
-
 export function App() {
   const [kind, setKind] = useState<SeedKind>(initial.kind ?? 'privateKey');
   const [requestedPage, setPage] = useState<bigint>(initial.page ?? 1n);
@@ -60,7 +45,7 @@ export function App() {
   );
 
   const pageLimit = totalPages(kind, effectiveOptions);
-  const page = requestedPage < 1n ? 1n : requestedPage > pageLimit ? pageLimit : requestedPage;
+  const page = normalizePage(requestedPage, pageLimit);
   useEffect(() => { if (requestedPage !== page) setPage(page); }, [requestedPage, page]);
 
   const methodMeta = kind === 'mnemonic' ? METHOD_META[effectiveOptions.method] : null;
@@ -73,7 +58,7 @@ export function App() {
   const accountMax = methodMeta?.accountMax ?? 0x7fffffff;
 
   function commitAccountIndex(next: number) {
-    const clamped = Math.min(accountMax, Math.max(0, Math.trunc(next)));
+    const clamped = clampAccountIndex(next, accountMax);
     setAccountIndex(clamped);
     setAccountInput(String(clamped));
   }
@@ -102,9 +87,9 @@ export function App() {
     clampPage,
     isFirst,
     isLast,
-  } = useKeyspace({ kind, options: effectiveOptions, page, accountIndex });
+  } = useKeyspace({ kind, options: effectiveOptions, page, accountIndex: clampAccountIndex(accountIndex, accountMax) });
 
-  const pagePercent = Number((page * 1_000_000n) / pages) / 10_000;
+  const pagePercent = pageLocationPercent(page, pages);
   const pagePercentLabel = `${pagePercent.toFixed(4)}%`;
 
   const addresses = useMemo(() => rows.map((row) => row.address), [rows]);
@@ -152,15 +137,14 @@ export function App() {
 
   function jumpToKey(event: React.FormEvent) {
     event.preventDefault();
-    const hex = keyInput.trim().replace(/^0x/i, '');
-    if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
+    const position = privateKeyPosition(keyInput);
+    if (position === null) {
       setKeyError('Enter a 64-character hexadecimal private key.');
       return;
     }
-    const position = BigInt(`0x${hex}`);
     setKeyError(null);
     setSelectedPosition(position);
-    go(position / BigInt(PAGE_SIZE) + 1n);
+    go(pageForPosition(position));
   }
 
   function jump() {
@@ -226,8 +210,8 @@ export function App() {
                 <span className="summary__progress-value">{pagePercentLabel}</span>
               </div>
               <div className="summary__meta">
-                Showing {PAGE_SIZE} Nano {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · this page starts at {kind === 'privateKey' ? 'key' : 'seed phrase'} position{' '}
-                {formatBigInt((page - 1n) * BigInt(PAGE_SIZE))}
+                Showing {rows.length || PAGE_SIZE} Nano {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · this page starts at {kind === 'privateKey' ? 'key' : 'seed phrase'} position{' '}
+                {formatBigInt(pageStartPosition(page))}
               </div>
             </div>
           </div>
@@ -242,7 +226,7 @@ export function App() {
             <button
               type="button"
               className="btn btn--dice"
-              onClick={() => go(sampleRandomPage(pages))}
+              onClick={() => go(randomPage(kind, effectiveOptions, (length) => crypto.getRandomValues(new Uint8Array(length))))}
               disabled={pending}
             >
               <DiceIcon width={15} height={15} /> Random
