@@ -62,7 +62,6 @@ export function writeUrlState(state: KeyspaceUrlState): string {
     params.set('words', String(state.options.wordCount));
     params.set('method', state.options.method);
     if (state.accountIndex !== 0) params.set('account', String(state.accountIndex));
-    if (state.options.passphrase) params.set('passphrase', state.options.passphrase);
   }
   const query = params.toString();
   return query ? `?${query}` : '';

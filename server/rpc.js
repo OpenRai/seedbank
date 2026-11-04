@@ -57,7 +57,7 @@ export class NanoRpcClient {
    * @param {Record<string, unknown>} body
    * @returns {Promise<T>}
    */
-  async call(action, body) {
+  async call(action, body, validate = () => {}) {
     /** @type {string[]} */
     const errors = [];
     for (let attempt = 0; attempt < this.nodes.length; attempt++) {
@@ -77,6 +77,7 @@ export class NanoRpcClient {
           if (json && typeof json === 'object' && 'error' in json && json.error) {
             throw new RpcError(String(json.error));
           }
+          validate(json);
           this.preferred = this.nodes.indexOf(node);
           return /** @type {T} */ (json);
         } finally {
@@ -98,7 +99,7 @@ export class NanoRpcClient {
     /** @type {Map<string, { balanceRaw: string, receivableRaw: string }>} */
     const out = new Map();
     for (const chunk of chunkArray(addresses, this.batchSize)) {
-      const json = await this.call('accounts_balances', { accounts: chunk });
+      const json = await this.call('accounts_balances', { accounts: chunk }, (json) => validateBalances(json, chunk));
       const balances = json.balances ?? {};
       for (const [address, entry] of Object.entries(balances)) {
         out.set(address, {
@@ -119,7 +120,7 @@ export class NanoRpcClient {
     /** @type {Set<string>} */
     const opened = new Set();
     for (const chunk of chunkArray(addresses, this.batchSize)) {
-      const json = await this.call('accounts_frontiers', { accounts: chunk });
+      const json = await this.call('accounts_frontiers', { accounts: chunk }, validateFrontiers);
       const frontiers = json.frontiers ?? {};
       for (const [address, frontier] of Object.entries(frontiers)) {
         if (frontier && !/^0+$/.test(frontier)) opened.add(address);
@@ -160,4 +161,28 @@ function chunkArray(items, size) {
   const chunks = [];
   for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
   return chunks;
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validateBalances(json, addresses) {
+  if (!isRecord(json) || !isRecord(json.balances)) throw new RpcError('Malformed balances response');
+  for (const address of addresses) {
+    const entry = json.balances[address];
+    if (!isRecord(entry)) throw new RpcError('Missing account balance');
+    for (const value of [entry.balance, entry.receivable ?? entry.pending]) {
+      if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value) || BigInt(value) >= (1n << 128n)) {
+        throw new RpcError('Invalid raw balance');
+      }
+    }
+  }
+}
+
+function validateFrontiers(json) {
+  if (!isRecord(json) || !(isRecord(json.frontiers) || json.frontiers === '')) throw new RpcError('Malformed frontiers response');
+  for (const value of Object.values(json.frontiers)) {
+    if (typeof value !== 'string' || !/^[0-9a-fA-F]{64}$/.test(value)) throw new RpcError('Invalid frontier');
+  }
 }

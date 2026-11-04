@@ -44,9 +44,9 @@ const rpc = new NanoRpcClient({ nodes: RPC_NODES, timeoutMs: RPC_TIMEOUT_MS });
 const inFlight = new Map();
 
 const UNKNOWN_STATE = {
-  balanceRaw: '0',
-  receivableRaw: '0',
-  opened: false,
+  balanceRaw: null,
+  receivableRaw: null,
+  opened: null,
 };
 
 /**
@@ -69,7 +69,7 @@ async function resolveAddresses(addresses) {
         results: unique.map((address) => {
           const row = fresh.get(address) ?? before.get(address);
           if (!row) return { address, ...UNKNOWN_STATE, stale: true, fetchedAt: null };
-          return { ...row, stale: false };
+          return row;
         }),
         rpcError,
       };
@@ -82,7 +82,7 @@ async function resolveAddresses(addresses) {
     results: unique.map((address) => {
       const row = cached.get(address);
       if (!row) return { address, ...UNKNOWN_STATE, stale: true, fetchedAt: null };
-      return { ...row, stale: true };
+      return { ...row, stale: Boolean(rpcError) && row.stale };
     }),
     rpcError,
   };
@@ -141,7 +141,7 @@ function rateLimit(req, res, next) {
 
 const app = express();
 app.disable('x-powered-by');
-app.set('trust proxy', true);
+app.set('trust proxy', process.env.TRUST_PROXY ? process.env.TRUST_PROXY.split(',').map((value) => value.trim()).filter(Boolean) : false);
 app.use(express.json({ limit: '64kb' }));
 
 app.get('/api/health', (_req, res) => {
@@ -197,7 +197,7 @@ if (existsSync(dist)) {
 }
 
 const server = app.listen(PORT, HOST, () => {
-  console.log(`seedbank listening on http://${HOST}:${PORT}`);
+  console.log(`seedbank listening on http://${HOST}:${server.address().port}`);
   console.log(`Cache: ${CACHE_FILE} (ttl ${CACHE_TTL_MS} ms) · RPC: ${rpc.nodeNames.join(', ')}`);
 });
 

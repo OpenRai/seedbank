@@ -49,3 +49,12 @@ test('unknown methods and malformed pages are ignored', () => {
 test('an account index is parsed independently of the view', () => {
   assert.equal(readUrlState('?account=42').accountIndex, 42);
 });
+
+test('shared links exclude passphrases', async () => {
+  const { writeUrlState } = await import('../src/lib/urlState.ts');
+  const query = writeUrlState({ kind: 'mnemonic', page: 42n, accountIndex: 0,
+    options: { wordCount: 12, method: 'bip39Ledger', passphrase: 'secret' } });
+  assert.equal(query.includes('secret'), false);
+  assert.equal(query.includes('passphrase'), false);
+  assert.equal(readUrlState(query).page, 42n);
+});

@@ -7,9 +7,9 @@
 
 export interface AccountState {
   address: string;
-  balanceRaw: string;
-  receivableRaw: string;
-  opened: boolean;
+  balanceRaw: string | null;
+  receivableRaw: string | null;
+  opened: boolean | null;
   stale: boolean;
   fetchedAt: number | null;
 }

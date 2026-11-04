@@ -95,7 +95,7 @@ test('a 20-address page costs exactly two upstream calls', async () => {
 test('large pages are chunked into bounded plural requests', async () => {
   const { impl, calls } = recordingFetch((request) =>
     request.action === 'accounts_balances'
-      ? okResponse({ balances: {} })
+      ? okResponse({ balances: Object.fromEntries(request.accounts.map((a) => [a, { balance: '0', pending: '0' }])) })
       : okResponse({ frontiers: {} }),
   );
   const client = new NanoRpcClient({
@@ -141,4 +141,21 @@ test('a JSON-RPC error body is treated as a failure, not a success', async () =>
     fetchImpl: async () => okResponse({ error: 'Account not found' }),
   });
   await assert.rejects(() => client.accountsBalances([ADDR(1)]), /Account not found/);
+});
+
+test('malformed successful RPC responses fail over instead of returning zeros', async () => {
+  for (const bad of [{}, { balances: {} }, { balances: { [ADDR(1)]: { balance: '-1', pending: '0' } } }]) {
+    const client = new NanoRpcClient({
+      nodes: [{ name: 'bad', url: 'http://bad' }, { name: 'good', url: 'http://good' }],
+      fetchImpl: async (url) => okResponse(url === 'http://bad' ? bad : { balances: { [ADDR(1)]: { balance: '9', pending: '0' } } }),
+    });
+    assert.equal((await client.accountsBalances([ADDR(1)])).get(ADDR(1)).balanceRaw, '9');
+  }
+});
+
+test('malformed frontiers are rejected while empty unopened results are accepted', async () => {
+  for (const payload of [{}, { frontiers: { [ADDR(1)]: 'invalid' } }]) {
+    const client = new NanoRpcClient({ nodes: [{ name: 'mock', url: 'http://mock' }], fetchImpl: async () => okResponse(payload) });
+    await assert.rejects(() => client.accountsFrontiers([ADDR(1)]), /frontier/i);
+  }
 });
