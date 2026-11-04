@@ -20,7 +20,7 @@ export function SensitiveValue({ value, label, wordWrap = false }: SensitiveValu
   const words = wordWrap ? value.split(' ') : null;
 
   return (
-    <div className="keybox">
+    <div className="keybox keybox--sensitive">
       <div className="keybox__value">
         {words
           ? words.map((word, index) => (

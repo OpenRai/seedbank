@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatXno, isNonZeroRaw } from '@lib/format';
+import { CopyButton } from './CopyButton';
 import type { AccountState } from '@lib/api';
 
 interface BalanceCellProps {
@@ -13,7 +14,7 @@ interface BalanceCellProps {
  */
 export function BalanceCell({ state, loading }: BalanceCellProps) {
   const [flash, setFlash] = useState(false);
-  const previous = useRef<string | undefined>(undefined);
+  const previous = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     if (state && previous.current !== undefined && previous.current !== state.balanceRaw) {
@@ -36,10 +37,11 @@ export function BalanceCell({ state, loading }: BalanceCellProps) {
     );
   }
 
-  if (!state) {
+  if (!state || state.fetchedAt === null || state.balanceRaw === null || state.receivableRaw === null || state.opened === null) {
     return (
       <div className="cell">
-        <span className="balance-pill balance-pill--zero">—</span>
+        <span className="balance-pill balance-pill--zero">— XNO</span>
+        <div className="state state--error">RPC Error</div>
       </div>
     );
   }
@@ -49,6 +51,7 @@ export function BalanceCell({ state, loading }: BalanceCellProps) {
 
   return (
     <div className="cell">
+      <div className="copy-field">
       <span
         className={`balance-pill${zero ? ' balance-pill--zero' : ' balance-pill--funded'}`}
         style={flash ? { outline: '2px solid var(--primary)', outlineOffset: 1 } : undefined}
@@ -56,9 +59,11 @@ export function BalanceCell({ state, loading }: BalanceCellProps) {
       >
         {formatXno(state.balanceRaw)} <span style={{ opacity: 0.65 }}>XNO</span>
       </span>
+      <CopyButton value={formatXno(state.balanceRaw)} label="balance in XNO" />
+      </div>
       {funded && !state.opened ? <div className="receivable">unopened (only receivable)</div> : null}
       {isNonZeroRaw(state.receivableRaw) ? (
-        <div className="receivable">+ {formatXno(state.receivableRaw)} XNO receivable</div>
+        <div className="receivable copy-field">+ {formatXno(state.receivableRaw)} XNO receivable<CopyButton value={formatXno(state.receivableRaw)} label="receivable in XNO" /></div>
       ) : null}
       <div className={`state ${state.opened ? 'state--opened' : 'state--unopened'}`}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -66,7 +71,7 @@ export function BalanceCell({ state, loading }: BalanceCellProps) {
           <path d={state.opened ? 'M8 12.5 11 15.5 16.5 9.5' : 'M8.5 12h7'} strokeLinecap="round" />
         </svg>
         {state.opened ? 'Opened' : 'Unopened'}
-        {state.stale ? <span className="state--stale"> · cached</span> : null}
+        {state.stale ? <span className="state--stale"> · Cached</span> : null}
       </div>
     </div>
   );

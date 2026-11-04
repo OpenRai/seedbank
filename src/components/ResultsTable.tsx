@@ -12,9 +12,10 @@ interface ResultsTableProps {
   states: Map<string, AccountState>;
   loading: boolean;
   deriving: boolean;
+  selectedPosition?: bigint;
 }
 
-export function ResultsTable({ kind, rows, states, loading, deriving }: ResultsTableProps) {
+export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition }: ResultsTableProps) {
   const placeholders = deriving ? Math.max(0, 20 - rows.length) : 0;
 
   return (
@@ -36,12 +37,12 @@ export function ResultsTable({ kind, rows, states, loading, deriving }: ResultsT
 
       {rows.length === 0 && !deriving ? <div className="empty-state">No entries to show for this page.</div> : null}
 
-      {rows.map((row, index) => (
+      {rows.map((row) => (
         <ResultRow
           key={`${row.address}-${row.position}`}
           kind={kind}
           row={row}
-          index={index}
+          selected={row.position === selectedPosition}
           state={states.get(row.address)}
           loading={loading}
         />
@@ -67,13 +68,13 @@ export function ResultsTable({ kind, rows, states, loading, deriving }: ResultsT
 function ResultRow({
   kind,
   row,
-  index,
   state,
   loading,
+  selected,
 }: {
   kind: 'privateKey' | 'mnemonic';
   row: DerivedRow;
-  index: number;
+  selected: boolean;
   state: AccountState | undefined;
   loading: boolean;
 }) {
@@ -84,11 +85,11 @@ function ResultRow({
   const rowClass = funded ? 'row--funded' : state?.opened ? 'row--opened' : 'row--unopened';
 
   return (
-    <div className={`row ${rowClass}`}>
+    <div className={`row ${rowClass}${selected ? ' row--selected' : ''}`}>
       <div className="cell">
         <div className="seed-label">
           {kind === 'privateKey' ? 'Private key' : 'Mnemonic'}
-          <span className="seed-label__index">#{index}</span>
+          <span className="seed-label__index">#{row.position.toString()}</span>
         </div>
         {kind === 'privateKey' ? (
           <SensitiveValue value={row.privateKeyHex} label="private key" />
@@ -99,6 +100,7 @@ function ResultRow({
       </div>
 
       <div className="cell">
+        <div className="seed-label">Account address</div>
         <div className="keybox">
           <div className="address">{row.address}</div>
           <CopyButton value={row.address} label="address" />
@@ -113,7 +115,7 @@ function ResultRow({
             <ExternalIcon width={15} height={15} />
           </a>
         </div>
-        <div className="path">public key {row.publicKeyHex.toUpperCase()}</div>
+        <div className="path keybox"><span>public key {row.publicKeyHex.toUpperCase()}</span><CopyButton value={row.publicKeyHex.toUpperCase()} label="public key" /></div>
       </div>
 
       <BalanceCell state={state} loading={loading} />

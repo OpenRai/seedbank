@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigInt } from '@lib/keyspace';
+import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigInt, totalPages } from '@lib/keyspace';
 import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
 import { useKeyspace } from '@hooks/useKeyspace';
 import { useAccountStates } from '@hooks/useAccountStates';
@@ -8,14 +8,12 @@ import {
   CoinsIcon,
   DiceIcon,
   FirstIcon,
-  InfoIcon,
   KeyIcon,
   LastIcon,
   NextIcon,
   PrevIcon,
   RefreshIcon,
   SearchIcon,
-  SeedIcon,
   WarningIcon,
 } from '@components/Icons';
 import { formatXno, sumRaw } from '@lib/format';
@@ -46,17 +44,24 @@ function sampleRandomPage(maxPage: bigint): bigint {
 
 export function App() {
   const [kind, setKind] = useState<SeedKind>(initial.kind ?? 'privateKey');
-  const [page, setPage] = useState<bigint>(initial.page ?? 1n);
+  const [requestedPage, setPage] = useState<bigint>(initial.page ?? 1n);
   const [options, setOptions] = useState(initial.options ?? DEFAULT_OPTIONS);
   const [accountIndex, setAccountIndex] = useState(initial.accountIndex ?? 0);
   const [accountInput, setAccountInput] = useState(String(initial.accountIndex ?? 0));
   const [pageInput, setPageInput] = useState((initial.page ?? 1n).toString());
+  const [keyInput, setKeyInput] = useState('');
+  const [keyError, setKeyError] = useState<string | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState<bigint | undefined>();
   const [pending, setPending] = useState(false);
 
   const effectiveOptions = useMemo(
     () => (kind === 'mnemonic' ? options : DEFAULT_OPTIONS),
     [kind, options],
   );
+
+  const pageLimit = totalPages(kind, effectiveOptions);
+  const page = requestedPage < 1n ? 1n : requestedPage > pageLimit ? pageLimit : requestedPage;
+  useEffect(() => { if (requestedPage !== page) setPage(page); }, [requestedPage, page]);
 
   const methodMeta = kind === 'mnemonic' ? METHOD_META[effectiveOptions.method] : null;
 
@@ -99,6 +104,9 @@ export function App() {
     isLast,
   } = useKeyspace({ kind, options: effectiveOptions, page, accountIndex });
 
+  const pagePercent = Number((page * 1_000_000n) / pages) / 10_000;
+  const pagePercentLabel = `${pagePercent.toFixed(4)}%`;
+
   const addresses = useMemo(() => rows.map((row) => row.address), [rows]);
   const { states, loading, error: stateError, degraded, refresh } = useAccountStates(addresses);
 
@@ -116,6 +124,11 @@ export function App() {
     if (accountIndex > accountMax) commitAccountIndex(accountMax);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountMax]);
+
+  const totalsKnown = rows.length > 0 && rows.every((row) => {
+    const state = states.get(row.address);
+    return state && state.fetchedAt !== null && state.balanceRaw !== null && state.receivableRaw !== null && state.opened !== null;
+  });
 
   const totals = useMemo(() => {
     const balance = sumRaw(rows.map((row) => states.get(row.address)?.balanceRaw ?? '0'));
@@ -137,6 +150,19 @@ export function App() {
     window.setTimeout(() => setPending(false), 0);
   }
 
+  function jumpToKey(event: React.FormEvent) {
+    event.preventDefault();
+    const hex = keyInput.trim().replace(/^0x/i, '');
+    if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
+      setKeyError('Enter a 64-character hexadecimal private key.');
+      return;
+    }
+    const position = BigInt(`0x${hex}`);
+    setKeyError(null);
+    setSelectedPosition(position);
+    go(position / BigInt(PAGE_SIZE) + 1n);
+  }
+
   function jump() {
     const parsed = parsePageInput(pageInput);
     if (parsed === null) {
@@ -154,12 +180,13 @@ export function App() {
             <span className="brand__mark" aria-hidden="true">
               <KeyIcon width={16} height={16} />
             </span>
-            seed<span className="brand__accent">bank</span>
+            <span>seed<span className="brand__accent">bank</span><span className="brand__domain">.openrai.org</span></span>
           </a>
           <nav className="site-nav" aria-label="Keyspace view">
             <button
               type="button"
               className={`site-nav__link${kind === 'privateKey' ? ' site-nav__link--active' : ''}`}
+              aria-pressed={kind === 'privateKey'}
               onClick={() => {
                 setKind('privateKey');
                 go(1n);
@@ -170,6 +197,7 @@ export function App() {
             <button
               type="button"
               className={`site-nav__link${kind === 'mnemonic' ? ' site-nav__link--active' : ''}`}
+              aria-pressed={kind === 'mnemonic'}
               onClick={() => {
                 setKind('mnemonic');
                 go(1n);
@@ -184,9 +212,6 @@ export function App() {
       <main className="container main">
         <section className="card">
           <div className="card__body summary">
-            <span className="summary__icon" aria-hidden="true">
-              {kind === 'privateKey' ? <KeyIcon width={20} height={20} /> : <SeedIcon width={20} height={20} />}
-            </span>
             <div className="summary__text">
               <h1 className="summary__title">
                 Nano {kind === 'privateKey' ? 'private keys' : 'mnemonic seeds'} page{' '}
@@ -196,19 +221,17 @@ export function App() {
                 </span>
                 )
               </h1>
-              <div className="summary__progress">
-                <span className="summary__progress-value">{info.coverageDisplay}</span>
+              <div className="summary__progress" role="progressbar" aria-label="Page location within keyspace" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pagePercent}>
+                <div className="summary__progress-fill" style={{ width: `${pagePercent}%` }} />
+                <span className="summary__progress-value">{pagePercentLabel}</span>
               </div>
               <div className="summary__meta">
-                Showing {PAGE_SIZE} {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · derived in your
-                browser at view-time · page {formatBigInt(page)} starts at position{' '}
+                Showing {PAGE_SIZE} Nano {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · this page starts at {kind === 'privateKey' ? 'key' : 'seed phrase'} position{' '}
                 {formatBigInt((page - 1n) * BigInt(PAGE_SIZE))}
               </div>
             </div>
           </div>
-        </section>
-
-        <section className="card">
+          <div className="pagination-controls">
           <div className="card__section controls__row">
             <button type="button" className="btn" onClick={() => go(1n)} disabled={isFirst || pending}>
               <FirstIcon width={15} height={15} /> First
@@ -264,7 +287,11 @@ export function App() {
             </div>
           </div>
 
-          {kind === 'mnemonic' ? (
+          </div>
+        </section>
+
+        {kind === 'mnemonic' ? (
+          <section className="card">
             <div className="card__section">
               <div className="settings__grid">
                 <div className="field">
@@ -332,7 +359,7 @@ export function App() {
                     type="text"
                     spellCheck={false}
                     autoComplete="off"
-                    placeholder={methodMeta && !methodMeta.passphrase ? 'n/a for this method' : 'optional 25th word'}
+                    placeholder={methodMeta && !methodMeta.passphrase ? 'n/a for this method' : 'optional BIP39 passphrase'}
                     value={options.passphrase ?? ''}
                     onChange={(event) =>
                       setOptions((current) => ({ ...current, passphrase: event.target.value || undefined }))
@@ -424,8 +451,29 @@ export function App() {
                 ) : null}
               </div>
             </div>
-          ) : null}
-        </section>
+          </section>
+        ) : null}
+
+        {kind === 'privateKey' ? (
+          <section className="card">
+            <form className="card__section controls__row" onSubmit={jumpToKey}>
+              <SearchIcon width={20} height={20} />
+              <input
+                className="input key-search"
+                aria-label="Jump to Nano private key"
+                aria-invalid={Boolean(keyError)}
+                aria-describedby={keyError ? 'key-search-error' : undefined}
+                placeholder="64-character HEX private key"
+                value={keyInput}
+                onChange={(event) => { setKeyInput(event.target.value); setKeyError(null); }}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button className="btn btn--primary" type="submit"><SearchIcon width={15} height={15} /> Search</button>
+              {keyError ? <span id="key-search-error" role="alert">{keyError}</span> : null}
+            </form>
+          </section>
+        ) : null}
 
         <section className="stats">
           <div className="stat">
@@ -433,11 +481,11 @@ export function App() {
               <CoinsIcon width={13} height={13} /> Total balance
             </div>
             <div className="stat__value stat__value--balance">
-              {formatXno(totals.balance)}
+              {totalsKnown ? formatXno(totals.balance) : '—'}
               <span className="stat__suffix">XNO</span>
             </div>
             <div className="stat__hint">
-              {totals.funded} of {rows.length} entries funded on this page
+              {totalsKnown ? `${totals.funded} of ${rows.length} entries funded on this page` : 'Balance data unavailable'}
             </div>
           </div>
           <div className="stat">
@@ -445,20 +493,18 @@ export function App() {
               <KeyIcon width={13} height={13} /> Opened accounts
             </div>
             <div className="stat__value stat__value--opened">
-              {totals.opened}
+              {totalsKnown ? totals.opened : '—'}
               <span className="stat__suffix">/ {rows.length || PAGE_SIZE}</span>
             </div>
-            <div className="stat__hint">Accounts with at least one block on the ledger</div>
           </div>
           <div className="stat">
             <div className="stat__label stat__label--receivable">
               <CoinsIcon width={13} height={13} /> Receivable
             </div>
             <div className="stat__value stat__value--balance">
-              {formatXno(totals.receivable)}
+              {totalsKnown ? formatXno(totals.receivable) : '—'}
               <span className="stat__suffix">XNO</span>
             </div>
-            <div className="stat__hint">Pending on unopened accounts (not spendable)</div>
           </div>
         </section>
 
@@ -470,45 +516,31 @@ export function App() {
 
         {stateError ? (
           <div className="banner banner--warn">
-            <WarningIcon width={16} height={16} /> Balance lookup failed: {stateError}. Keys below are still derived
-            locally.
+            <WarningIcon width={16} height={16} /> Balance lookup failed: {stateError}.
           </div>
         ) : null}
 
         {degraded && !stateError ? (
           <div className="banner banner--warn">
-            <WarningIcon width={16} height={16} /> Upstream RPC nodes were unreachable; showing last known cached
-            balances.
+            <WarningIcon width={16} height={16} /> RPC lookup failed. Cached values are marked; unavailable values show —.
           </div>
         ) : null}
 
-        <ResultsTable kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
+        <ResultsTable selectedPosition={kind === 'privateKey' ? selectedPosition : undefined} kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
 
-        <section className="notice-list">
-          <div className="banner banner--info">
-            <InfoIcon width={16} height={16} /> Balances are proxied through this site to public Nano RPC nodes and
-            cached for up to {Math.round(3_600_000 / 60_000)} minutes. Private keys and mnemonics are never sent
-            anywhere — they exist only in this browser tab.
-          </div>
-        </section>
       </main>
 
       <footer className="site-footer">
         <div className="container site-footer__grid">
           <div>
-            <strong>About seedbank</strong>
+            <strong><span className="about-label">About </span><span className="about-seed">seed</span><span className="brand__accent">bank</span></strong>
             <p style={{ margin: '6px 0 0' }}>
-              A deterministic browser over the Nano keyspace. Every private key and seed phrase is derived at view-time
+              A deterministic browser over the <a href="https://nano.org/">Nano cryptocurrency</a> keyspace. Every private key and seed phrase is derived at view-time
               from its position in the 2<sup>256</sup> range — nothing is stored, indexed, or pregenerated.
             </p>
           </div>
           <div>
-            <strong>Derivation notes</strong>
-            <ul className="footer-list">
-              <li>Public key: ED25519 with BLAKE2b-512, as used by the Nano protocol</li>
-              <li>Nano seed: privateKey[i] = BLAKE2b-256(seed ‖ uint32BE(i))</li>
-              <li>BIP39: SLIP-0010 ed25519, hardened path m/44'/165'/i'</li>
-            </ul>
+            © 2026 The OpenRai Initiative
           </div>
         </div>
       </footer>
