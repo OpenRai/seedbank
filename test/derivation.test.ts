@@ -229,9 +229,13 @@ test('out-of-range pages are rejected', async () => {
   );
 });
 
-test('keyspace metadata reports a capped page count and honest coverage', () => {
+test('keyspace metadata reports the full page count and honest coverage', () => {
   const info = pageInfo('privateKey', { wordCount: 12, method: 'bip39Ledger' });
-  assert.equal(info.exact, false);
-  assert.equal(info.pagesDisplay, '1.00E+24');
+  assert.equal(info.exact, true);
+  assert.equal(info.pages, (1n << 256n) / 20n);
+  assert.equal(
+    info.pagesDisplay,
+    '5,789,604,461,865,809,771,178,549,250,434,395,392,663,499,233,282,028,201,972,879,200,395,656,481,996',
+  );
   assert.equal(info.coverageDisplay, '0.00000%');
 });

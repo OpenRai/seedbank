@@ -1,4 +1,4 @@
-import { wordCountForMethod, type SeedKind, type MnemonicMethod, type MnemonicOptions } from '@lib/keyspace';
+import { MAX_PAGE_DIGITS, wordCountForMethod, type SeedKind, type MnemonicMethod, type MnemonicOptions } from '@lib/keyspace';
 
 export interface KeyspaceUrlState {
   kind: SeedKind;
@@ -20,7 +20,7 @@ export function readUrlState(search: string): Partial<KeyspaceUrlState> {
   if (view === 'keys' || view === 'mnemonics') state.kind = view === 'keys' ? 'privateKey' : 'mnemonic';
 
   const page = params.get('page');
-  if (page && /^\d{1,24}$/.test(page)) state.page = BigInt(page);
+  if (page && page.length <= MAX_PAGE_DIGITS && /^\d+$/.test(page)) state.page = BigInt(page);
 
   const words = params.get('words');
   if (words === '12' || words === '24') state.options = { ...DEFAULT_OPTIONS, wordCount: Number(words) as 12 | 24 };

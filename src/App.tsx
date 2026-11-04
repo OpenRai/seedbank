@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigIntCompact } from '@lib/keyspace';
+import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigInt } from '@lib/keyspace';
 import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
 import { useKeyspace } from '@hooks/useKeyspace';
 import { useAccountStates } from '@hooks/useAccountStates';
@@ -190,7 +190,7 @@ export function App() {
             <div className="summary__text">
               <h1 className="summary__title">
                 Nano {kind === 'privateKey' ? 'private keys' : 'mnemonic seeds'} page{' '}
-                <strong>#{formatBigIntCompact(page)}</strong> out of <strong>#{info.pagesDisplay}</strong> (
+                <strong>#{formatBigInt(page)}</strong> out of <strong>#{info.pagesDisplay}</strong> (
                 <span title={`One page covers ${coverageFraction(kind, effectiveOptions)} of the keyspace`}>
                   {info.coverageDisplay}
                 </span>
@@ -201,8 +201,8 @@ export function App() {
               </div>
               <div className="summary__meta">
                 Showing {PAGE_SIZE} {kind === 'privateKey' ? 'private keys' : 'seed phrases'} per page · derived in your
-                browser at view-time · page {formatBigIntCompact(page)} starts at position{' '}
-                {formatBigIntCompact((page - 1n) * BigInt(PAGE_SIZE))}
+                browser at view-time · page {formatBigInt(page)} starts at position{' '}
+                {formatBigInt((page - 1n) * BigInt(PAGE_SIZE))}
               </div>
             </div>
           </div>

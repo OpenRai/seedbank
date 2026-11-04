@@ -12,9 +12,10 @@
 
 export const PAGE_SIZE = 20;
 
-/** Page counts must fit a URL-safe integer, so cap the key space accordingly. */
-export const MAX_PAGE_DIGITS = 24;
-export const MAX_PAGE = 10n ** BigInt(MAX_PAGE_DIGITS);
+/** Longest page number accepted from a URL or the page field. The real
+ *  maximum is 2^256 / PAGE_SIZE, a 76-digit number, so this leaves headroom
+ *  while keeping pathological input bounded. */
+export const MAX_PAGE_DIGITS = 100;
 
 export type SeedKind = 'privateKey' | 'mnemonic';
 
@@ -146,18 +147,17 @@ export function totalEntries(kind: SeedKind, options: MnemonicOptions): bigint {
 }
 
 export function totalPages(kind: SeedKind, options: MnemonicOptions): bigint {
-  const pages = totalEntries(kind, options) / BigInt(PAGE_SIZE);
-  return pages > MAX_PAGE ? MAX_PAGE : pages;
+  return totalEntries(kind, options) / BigInt(PAGE_SIZE);
 }
 
 export interface PageInfo {
-  /** Total number of pages, capped to `MAX_PAGE`. */
+  /** Total number of pages in the keyspace. */
   pages: bigint;
-  /** Human readable page count, scientific notation beyond 1e15. */
+  /** Human readable page count, with thousands separators. */
   pagesDisplay: string;
   /** Coverage of one page, e.g. `0.00000%`. */
   coverageDisplay: string;
-  /** Whether `pages` is the exact total rather than a capped value. */
+  /** Whether `pages` is the exact total. */
   exact: boolean;
   /** Log10 of the page count, used to scale the decorative progress bar. */
   pagesLog10: number;
@@ -173,20 +173,18 @@ const COVERAGE_DECIMALS = 5;
  */
 export function pageInfo(kind: SeedKind, options: MnemonicOptions): PageInfo {
   const pages = totalPages(kind, options);
-  const exact = pages < MAX_PAGE;
-  const denominator = exact ? pages : MAX_PAGE;
 
   const scale = 10n ** BigInt(COVERAGE_DECIMALS);
-  const scaled = (100n * scale) / (denominator > 1n ? denominator : 1n);
+  const scaled = (100n * scale) / (pages > 1n ? pages : 1n);
   const whole = scaled / scale;
   const fraction = (scaled % scale).toString().padStart(COVERAGE_DECIMALS, '0');
   const coverageDisplay = `${whole}.${fraction}%`;
 
   return {
     pages,
-    pagesDisplay: formatBigIntCompact(pages),
+    pagesDisplay: formatBigInt(pages),
     coverageDisplay,
-    exact,
+    exact: true,
     pagesLog10: pages.toString().length - 1,
   };
 }
@@ -194,18 +192,13 @@ export function pageInfo(kind: SeedKind, options: MnemonicOptions): PageInfo {
 /** The exact, non-rounded coverage fraction, for tooltips and detail views. */
 export function coverageFraction(kind: SeedKind, options: MnemonicOptions): string {
   const pages = totalPages(kind, options);
-  const denominator = pages < MAX_PAGE ? pages : MAX_PAGE;
-  return `1 / ${formatBigIntCompact(denominator)}`;
+  return `1 / ${formatBigInt(pages > 1n ? pages : 1n)}`;
 }
 
-/** Format a big integer with thousands separators, or scientific notation. */
-export function formatBigIntCompact(value: bigint): string {
-    const text = value.toString();
-    if (text.length <= 21) return text.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    const exponent = text.length - 1;
-    const mantissa = `${text[0]}.${text.slice(1, 3)}`;
-    return `${mantissa}E+${exponent}`;
-  }
+/** Format a non-negative integer with thousands separators. */
+export function formatBigInt(value: bigint): string {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
 
 /** Whether the keyspace is small enough to expose an exact "last page" number. */
 export function isPageCountExact(kind: SeedKind, options: MnemonicOptions): boolean {
