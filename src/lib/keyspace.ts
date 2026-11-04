@@ -124,6 +124,12 @@ export function methodForWordCount(wordCount: 12 | 24, current: MnemonicMethod):
   return current;
 }
 
+/** Pick a word count the method supports, preferring the current one. */
+export function wordCountForMethod(method: MnemonicMethod, current: 12 | 24): 12 | 24 {
+  const wordCounts = METHOD_META[method].wordCounts;
+  return wordCounts.includes(current) ? current : wordCounts[0];
+}
+
 export const ENTRY_BITS: Record<SeedKind, number> = {
   privateKey: 256,
   mnemonic: 128,

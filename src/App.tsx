@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, coverageFraction, formatBigIntCompact } from '@lib/keyspace';
+import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigIntCompact } from '@lib/keyspace';
 import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
 import { useKeyspace } from '@hooks/useKeyspace';
 import { useAccountStates } from '@hooks/useAccountStates';
@@ -280,11 +280,7 @@ export function App() {
                     }}
                   >
                     {([12, 24] as const).map((wc) => (
-                      <option
-                        key={wc}
-                        value={wc}
-                        disabled={methodMeta ? !methodMeta.wordCounts.includes(wc) : false}
-                      >
+                      <option key={wc} value={wc}>
                         {wc} words ({wc === 12 ? '128' : '256'} bits)
                       </option>
                     ))}
@@ -304,18 +300,12 @@ export function App() {
                       setOptions((current) => ({
                         ...current,
                         method,
-                        wordCount: METHOD_META[method].wordCounts.includes(current.wordCount)
-                          ? current.wordCount
-                          : (METHOD_META[method].wordCounts[0] as 12 | 24),
+                        wordCount: wordCountForMethod(method, current.wordCount),
                       }));
                     }}
                   >
                     {Object.values(METHOD_META).map((meta) => (
-                      <option
-                        key={meta.method}
-                        value={meta.method}
-                        disabled={!meta.wordCounts.includes(options.wordCount)}
-                      >
+                      <option key={meta.method} value={meta.method}>
                         {meta.label}
                       </option>
                     ))}

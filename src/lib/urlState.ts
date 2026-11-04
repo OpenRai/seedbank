@@ -1,4 +1,4 @@
-import type { SeedKind, MnemonicMethod, MnemonicOptions } from '@lib/keyspace';
+import { wordCountForMethod, type SeedKind, type MnemonicMethod, type MnemonicOptions } from '@lib/keyspace';
 
 export interface KeyspaceUrlState {
   kind: SeedKind;
@@ -40,6 +40,16 @@ export function readUrlState(search: string): Partial<KeyspaceUrlState> {
 
   const account = params.get('account');
   if (account && /^\d{1,10}$/.test(account)) state.accountIndex = Number(account);
+
+  /* A shared URL may pair a method with an unsupported word count, e.g.
+   * `?words=12&method=legacyNano`. Normalise it the same way the controls do
+   * so the selected method and phrase length always agree. */
+  if (state.options) {
+    state.options = {
+      ...state.options,
+      wordCount: wordCountForMethod(state.options.method, state.options.wordCount),
+    };
+  }
 
   return state;
 }
