@@ -21,6 +21,13 @@ export const KeyIcon = (props: IconProps) => (
   </svg>
 );
 
+export const SeedKeyIcon = (props: IconProps) => (
+  <svg {...base(props)} fill="currentColor" stroke="none">
+    <path d="m10 11 8-8 4 4-2 2-2-2-2 2 2 2-2 2-2-2-3 3Z" />
+    <path fillRule="evenodd" d="M12 10C6 9 2 13 2 21c8 1 13-5 10-11Zm-6.5 7.8c.1-3 1.7-4.7 4.6-4.6 0 2.8-1.5 4.6-4.6 4.6Z" />
+  </svg>
+);
+
 export const DiceIcon = (props: IconProps) => (
   <svg {...base(props)}>
     <rect x="3" y="3" width="18" height="18" rx="4" />

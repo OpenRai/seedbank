@@ -11,6 +11,7 @@ import {
   DiceIcon,
   FirstIcon,
   KeyIcon,
+  SeedKeyIcon,
   LastIcon,
   NextIcon,
   PrevIcon,
@@ -162,7 +163,7 @@ export function App() {
         <div className="container site-header__inner">
           <a className="brand" href="/">
             <span className="brand__mark" aria-hidden="true">
-              <KeyIcon width={16} height={16} />
+              <SeedKeyIcon width={17} height={17} />
             </span>
             <span>seed<span className="brand__accent">bank</span><span className="brand__domain">.openrai.org</span></span>
           </a>
