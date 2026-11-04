@@ -1,6 +1,6 @@
 {
-  "name": "NanoSeeds",
-  "short_name": "NanoSeeds",
+  "name": "seedbank",
+  "short_name": "seedbank",
   "description": "Nano keyspace explorer — browse any pageful of Nano private keys or mnemonic seeds.",
   "start_url": "/",
   "display": "standalone",

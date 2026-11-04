@@ -149,7 +149,7 @@ export function App() {
             <span className="brand__mark" aria-hidden="true">
               <KeyIcon width={16} height={16} />
             </span>
-            Nano<span className="brand__accent">Seeds</span>
+            seed<span className="brand__accent">bank</span>
           </a>
           <nav className="site-nav" aria-label="Keyspace view">
             <button
@@ -501,7 +501,7 @@ export function App() {
       <footer className="site-footer">
         <div className="container site-footer__grid">
           <div>
-            <strong>About NanoSeeds</strong>
+            <strong>About seedbank</strong>
             <p style={{ margin: '6px 0 0' }}>
               A deterministic browser over the Nano keyspace. Every private key and seed phrase is derived at view-time
               from its position in the 2<sup>256</sup> range — nothing is stored, indexed, or pregenerated.

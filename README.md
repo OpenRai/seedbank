@@ -1,6 +1,6 @@
-# NanoSeeds
+# seedbank
 
-**seeds.openrai.org** — a browser over the Nano keyspace.
+**seedbank.openrai.org** — a browser over the Nano keyspace.
 
 Browse any pageful of Nano private keys or mnemonic seeds. Every value is
 derived at view-time from its position in the 2^256 keyspace; nothing is

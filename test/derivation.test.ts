@@ -1,5 +1,5 @@
 /**
- * Derivation tests for NanoSeeds.
+ * Derivation tests for seedbank.
  *
  * Runs the real browser derivation modules directly under Node's TypeScript
  * stripping, so these vectors exercise exactly the code shipped to users.

@@ -1,5 +1,5 @@
 /**
- * NanoSeeds production server.
+ * seedbank production server.
  *
  * Serves the built SPA and a small JSON API:
  *
@@ -197,7 +197,7 @@ if (existsSync(dist)) {
 }
 
 const server = app.listen(PORT, HOST, () => {
-  console.log(`NanoSeeds listening on http://${HOST}:${PORT}`);
+  console.log(`seedbank listening on http://${HOST}:${PORT}`);
   console.log(`Cache: ${CACHE_FILE} (ttl ${CACHE_TTL_MS} ms) · RPC: ${rpc.nodeNames.join(', ')}`);
 });
 

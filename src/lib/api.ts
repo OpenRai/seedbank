@@ -1,5 +1,5 @@
 /**
- * Read-only client for the NanoSeeds balance proxy.
+ * Read-only client for the seedbank balance proxy.
  *
  * Only public addresses are ever sent. The server batches upstream RPC calls
  * and caches the results in SQLite.

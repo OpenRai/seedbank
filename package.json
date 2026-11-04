@@ -1,9 +1,9 @@
 {
-  "name": "nanoseeds",
+  "name": "seedbank",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "NanoSeeds — browse any pageful of Nano private keys or mnemonic seeds in the total keyspace.",
+  "description": "seedbank — browse any pageful of Nano private keys or mnemonic seeds in the total keyspace.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

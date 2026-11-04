@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# NanoSeeds — gitignore
+# seedbank — gitignore
 #
 # Node 26 + Vite + TypeScript stack. The only runtime state that should ever
 # live in the repo is source; everything else is generated, cached, or
