@@ -1,10 +1,12 @@
-import { MAX_PAGE_DIGITS, wordCountForMethod, type SeedKind, type MnemonicMethod, type MnemonicOptions } from '@lib/keyspace';
+import { pageForPosition } from './navigation';
+import { MAX_PAGE_DIGITS, totalEntries, wordCountForMethod, type SeedKind, type MnemonicMethod, type MnemonicOptions } from '@lib/keyspace';
 
 export interface KeyspaceUrlState {
   kind: SeedKind;
   page: bigint;
   options: MnemonicOptions;
   accountIndex: number;
+  entry?: bigint;
 }
 
 export const DEFAULT_OPTIONS: MnemonicOptions = {
@@ -51,26 +53,39 @@ export function readUrlState(search: string): Partial<KeyspaceUrlState> {
     };
   }
 
+  const entry = params.get('entry');
+  if (entry && entry.length <= MAX_PAGE_DIGITS && /^\d+$/.test(entry)) {
+    const position = BigInt(entry);
+    if (position < totalEntries(state.kind ?? 'privateKey', state.options ?? DEFAULT_OPTIONS)) {
+      state.entry = position;
+      state.page = pageForPosition(position);
+    }
+  }
+
   return state;
 }
 
-export function writeUrlState(state: KeyspaceUrlState): string {
+export function writeUrlState(state: KeyspaceUrlState, search = ''): string {
   const params = new URLSearchParams();
   params.set('view', state.kind === 'privateKey' ? 'keys' : 'mnemonics');
-  if (state.page > 1n) params.set('page', state.page.toString());
+  if (state.entry !== undefined) {
+    if (state.entry < 0n || state.entry >= totalEntries(state.kind, state.options)) {
+      throw new RangeError('Entry out of range');
+    }
+    params.set('entry', state.entry.toString());
+  } else if (state.page > 1n) params.set('page', state.page.toString());
   if (state.kind === 'mnemonic') {
     params.set('words', String(state.options.wordCount));
     params.set('method', state.options.method);
     if (state.accountIndex !== 0) params.set('account', String(state.accountIndex));
   }
+  const lookups = new URLSearchParams(search).get('lookups');
+  if (lookups) params.set('lookups', lookups);
   const query = params.toString();
   return query ? `?${query}` : '';
 }
 
 export function replaceUrl(state: KeyspaceUrlState): void {
-  const params = new URLSearchParams(writeUrlState(state));
-  const lookups = new URLSearchParams(window.location.search).get('lookups');
-  if (lookups) params.set('lookups', lookups);
-  const next = `${window.location.pathname}?${params.toString()}`;
+  const next = `${window.location.pathname}${writeUrlState(state, window.location.search)}`;
   window.history.replaceState(null, '', next);
 }

@@ -1,8 +1,8 @@
 import { clampPage as normalizePage, clampAccountIndex, pageStartPosition, pageForPosition, privateKeyPosition, pageLocationPercent } from '@lib/navigation';
 import { randomPage } from '@lib/derivePage';
 import { useEffect, useMemo, useState } from 'react';
-import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, coverageFraction, formatBigInt, totalPages } from '@lib/keyspace';
-import { DEFAULT_OPTIONS, readUrlState, replaceUrl } from '@lib/urlState';
+import { PAGE_SIZE, type MnemonicMethod, type SeedKind, METHOD_META, methodForWordCount, methodFormula, wordCountForMethod, formatBigInt, totalEntries, totalPages } from '@lib/keyspace';
+import { DEFAULT_OPTIONS, readUrlState, replaceUrl, writeUrlState } from '@lib/urlState';
 import { useKeyspace } from '@hooks/useKeyspace';
 import { useAccountStates } from '@hooks/useAccountStates';
 import { ResultsTable } from '@components/ResultsTable';
@@ -37,7 +37,7 @@ export function App() {
   const [pageInput, setPageInput] = useState((initial.page ?? 1n).toString());
   const [keyInput, setKeyInput] = useState('');
   const [keyError, setKeyError] = useState<string | null>(null);
-  const [selectedPosition, setSelectedPosition] = useState<bigint | undefined>();
+  const [selectedPosition, setSelectedPosition] = useState<bigint | undefined>(initial.entry);
   const [pending, setPending] = useState(false);
 
   const effectiveOptions = useMemo(
@@ -91,15 +91,23 @@ export function App() {
   } = useKeyspace({ kind, options: effectiveOptions, page, accountIndex: clampAccountIndex(accountIndex, accountMax) });
 
   const pagePercent = pageLocationPercent(page, pages);
-  const pagePercentLabel = `${pagePercent.toFixed(4)}%`;
+  const pagePercentLabel = `${pagePercent.toFixed(4)}% through the keyspace`;
 
   const addresses = useMemo(() => rows.map((row) => row.address), [rows]);
   const { states, loading, error: stateError, degraded, refresh } = useAccountStates(addresses);
 
+  useEffect(() => {
+    if (selectedPosition !== undefined && rows.some((row) => row.position === selectedPosition)) {
+      document.getElementById(`entry-${selectedPosition}`)?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [rows, selectedPosition]);
+
   /* Keep the URL in sync so any page is shareable and reproducible. */
   useEffect(() => {
-    replaceUrl({ kind, page, options: effectiveOptions, accountIndex });
-  }, [kind, page, effectiveOptions, accountIndex]);
+    const entry = selectedPosition !== undefined && selectedPosition < totalEntries(kind, effectiveOptions)
+      && pageForPosition(selectedPosition) === page ? selectedPosition : undefined;
+    replaceUrl({ kind, page, options: effectiveOptions, accountIndex, entry });
+  }, [kind, page, effectiveOptions, accountIndex, selectedPosition]);
 
   useEffect(() => {
     setPageInput(page.toString());
@@ -111,7 +119,7 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountMax]);
 
-  const totalsKnown = rows.length > 0 && rows.every((row) => {
+  const totalsKnown = !loading && !deriving && rows.length > 0 && rows.every((row) => {
     const state = states.get(row.address);
     return state && state.fetchedAt !== null && state.balanceRaw !== null && state.receivableRaw !== null && state.opened !== null;
   });
@@ -129,6 +137,8 @@ export function App() {
   }, [rows, states]);
 
   function go(next: bigint) {
+    setSelectedPosition(undefined);
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
     const clamped = clampPage(next, pages);
     setPending(true);
     setPage(clamped);
@@ -144,8 +154,8 @@ export function App() {
       return;
     }
     setKeyError(null);
-    setSelectedPosition(position);
     go(pageForPosition(position));
+    setSelectedPosition(position);
   }
 
   function jump() {
@@ -507,7 +517,7 @@ export function App() {
           </div>
         ) : null}
 
-        <ResultsTable selectedPosition={kind === 'privateKey' ? selectedPosition : undefined} kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
+        <ResultsTable selectedPosition={selectedPosition} permalink={(entry) => writeUrlState({ kind, page, options: effectiveOptions, accountIndex, entry }, window.location.search)} kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
 
       </main>
 

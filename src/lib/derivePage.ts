@@ -151,6 +151,7 @@ export async function derivePage(request: DerivePageRequest): Promise<DerivedRow
       publicKeyHex: bytesToHex(publicKeyFromPrivate(privateKey)).toUpperCase(),
       address: addressFromPrivateKey(privateKey),
       mnemonic,
+      accountIndex,
       path: rowPathLabel(options, accountIndex),
     });
   }

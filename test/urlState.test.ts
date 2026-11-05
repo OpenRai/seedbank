@@ -89,3 +89,78 @@ test('URL rewrites preserve debug lookup selection while excluding passphrases',
     else Reflect.deleteProperty(globalThis,'window');
   }
 });
+
+const { writeUrlState, DEFAULT_OPTIONS } = await import('../src/lib/urlState.ts');
+const { totalEntries, totalPages } = await import('../src/lib/keyspace.ts');
+const { derivePage } = await import('../src/lib/derivePage.ts');
+
+const entrySpaces = [
+  { kind: 'privateKey' as const, options: DEFAULT_OPTIONS },
+  { kind: 'mnemonic' as const, options: { wordCount: 12 as const, method: 'bip39Ledger' as const } },
+  { kind: 'mnemonic' as const, options: { wordCount: 24 as const, method: 'bip39Ledger' as const } },
+];
+
+for (const { kind, options } of entrySpaces) {
+  test(`${kind} ${options.wordCount} entry permalinks resolve exact boundary rows, including the final partial page`, async () => {
+    const count = totalEntries(kind, options);
+    const lastPage = totalPages(kind, options);
+    const finalStart = count - 16n;
+    const cases = [
+      [0n, 1n, 0], [19n, 1n, 19], [20n, 2n, 0], [39n, 2n, 19], [40n, 3n, 0],
+      [1961n, 99n, 1],
+      [finalStart - 1n, lastPage - 1n, 19],
+      [finalStart, lastPage, 0], [count - 1n, lastPage, 15],
+    ] as const;
+    for (const [entry, expectedPage, offset] of cases) {
+      const url = writeUrlState({ kind, options, page: 999n, entry, accountIndex: 3 });
+      const params = new URLSearchParams(url);
+      assert.equal(params.has('page'), false);
+      assert.equal(params.get('entry'), entry.toString());
+      assert.equal(url.includes('#'), false);
+      const parsed = readUrlState(url);
+      assert.equal(parsed.entry, entry);
+      assert.equal(parsed.page, expectedPage);
+      if (kind === 'mnemonic') {
+        assert.deepEqual(parsed.options, options);
+        assert.equal(parsed.accountIndex, 3);
+      }
+      const rows = await derivePage({ kind, options, page: parsed.page!, accountIndex: parsed.accountIndex ?? 0 });
+      assert.equal(rows[offset].position, entry);
+      assert.equal(rows.length, expectedPage === lastPage ? 16 : 20);
+    }
+  });
+
+  test(`${kind} ${options.wordCount} entry bounds reject one past the maximum and negative indices`, () => {
+    const count = totalEntries(kind, options);
+    const base = { kind, options, page: 2n, accountIndex: 0 };
+    const query = writeUrlState(base);
+    for (const invalid of ['-1', count.toString(), (count + 1n).toString(), '1.5', '1e2', 'abc', '', '9'.repeat(101)]) {
+      const state = readUrlState(`${query}&entry=${invalid}`);
+      assert.equal(state.entry, undefined);
+      assert.equal(state.page, 2n);
+    }
+    assert.throws(() => writeUrlState({ ...base, entry: -1n }), RangeError);
+    assert.throws(() => writeUrlState({ ...base, entry: count }), RangeError);
+  });
+}
+
+test('entry takes precedence over conflicting page and canonicalization removes page', () => {
+  const parsed = readUrlState('?view=keys&page=999&entry=20');
+  assert.equal(parsed.page, 2n);
+  assert.equal(parsed.entry, 20n);
+  assert.equal(writeUrlState({ kind: 'privateKey', page: parsed.page!, entry: parsed.entry, options: DEFAULT_OPTIONS, accountIndex: 0 }), '?view=keys&entry=20');
+});
+
+test('legacy normalization is applied before checking the mnemonic entry bound', () => {
+  const entry = (1n << 256n) - 1n;
+  const parsed = readUrlState(`?view=mnemonics&words=12&method=legacyNano&entry=${entry}`);
+  assert.equal(parsed.options?.wordCount, 24);
+  assert.equal(parsed.entry, entry);
+  assert.equal(parsed.page, totalPages('mnemonic', parsed.options!));
+});
+
+test('entry zero, lookup override and account settings survive URL rewrites without a page or fragment', () => {
+  const url = writeUrlState({ kind: 'mnemonic', page: 40n, entry: 0n, options: DEFAULT_OPTIONS, accountIndex: 7 }, '?lookups=nano-rpc');
+  assert.equal(url, '?view=mnemonics&entry=0&words=12&method=bip39Ledger&account=7&lookups=nano-rpc');
+  assert.equal(readUrlState(url).page, 1n);
+});

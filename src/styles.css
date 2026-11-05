@@ -1298,3 +1298,8 @@ button.chip:hover {
 .about-seed { color: var(--text); }
 
 .pagination-controls { border-top: 1px solid var(--border); }
+
+.row { scroll-margin-top: 112px; }
+.row-permalink { display: inline-flex; gap: 4px; }
+.row-permalink::after { content: '#'; color: var(--primary); opacity: .65; }
+.row-permalink:hover::after, .row-permalink:focus-visible::after { opacity: 1; }

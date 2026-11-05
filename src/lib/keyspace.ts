@@ -217,6 +217,8 @@ export interface DerivedRow {
   privateKeyHex: string;
   /** Mnemonic phrase, when this row came from a mnemonic page. */
   mnemonic?: string;
+  /** Account index used to derive this mnemonic's account. */
+  accountIndex?: number;
   /** Derivation path, when this row came from a mnemonic page. */
   path?: string;
 }

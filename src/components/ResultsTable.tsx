@@ -13,9 +13,10 @@ interface ResultsTableProps {
   loading: boolean;
   deriving: boolean;
   selectedPosition?: bigint;
+  permalink: (entry: bigint) => string;
 }
 
-export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition }: ResultsTableProps) {
+export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition, permalink }: ResultsTableProps) {
   const placeholders = deriving ? Math.max(0, 20 - rows.length) : 0;
 
   return (
@@ -42,6 +43,7 @@ export function ResultsTable({ kind, rows, states, loading, deriving, selectedPo
           key={`${row.address}-${row.position}`}
           kind={kind}
           row={row}
+          permalink={permalink(row.position)}
           selected={row.position === selectedPosition}
           state={states.get(row.address)}
           loading={loading}
@@ -71,10 +73,12 @@ function ResultRow({
   state,
   loading,
   selected,
+  permalink,
 }: {
   kind: 'privateKey' | 'mnemonic';
   row: DerivedRow;
   selected: boolean;
+  permalink: string;
   state: AccountState | undefined;
   loading: boolean;
 }) {
@@ -85,12 +89,12 @@ function ResultRow({
   const rowClass = funded ? 'row--funded' : state?.opened ? 'row--opened' : 'row--unopened';
 
   return (
-    <div className={`row ${rowClass}${selected ? ' row--selected' : ''}`}>
+    <div id={`entry-${row.position}`} className={`row ${rowClass}${selected ? ' row--selected' : ''}`}>
       <div className="cell">
-        <div className="seed-label">
+        <a className="seed-label row-permalink" href={permalink} aria-label={`Permalink to ${kind === 'privateKey' ? 'private key' : 'mnemonic'} ${row.position}`} aria-current={selected ? 'location' : undefined}>
           {kind === 'privateKey' ? 'Private key' : 'Mnemonic'}
           <span className="seed-label__index">#{row.position.toString()}</span>
-        </div>
+        </a>
         {kind === 'privateKey' ? (
           <SensitiveValue value={row.privateKeyHex} label="private key" />
         ) : (
@@ -100,7 +104,7 @@ function ResultRow({
       </div>
 
       <div className="cell">
-        <div className="seed-label">Account address</div>
+        <div className="seed-label">{kind === 'mnemonic' ? `Account ${row.accountIndex ?? 0} address` : 'Account address'}</div>
         <div className="keybox">
           <div className="address">{row.address}</div>
           <CopyButton value={row.address} label="address" />
