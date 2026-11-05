@@ -200,11 +200,7 @@ export function App() {
             <div className="summary__text">
               <h1 className="summary__title">
                 Nano {kind === 'privateKey' ? 'private keys' : 'mnemonic seeds'} page{' '}
-                <strong>#{formatBigInt(page)}</strong> out of <strong>#{info.pagesDisplay}</strong> (
-                <span title={`One page covers ${coverageFraction(kind, effectiveOptions)} of the keyspace`}>
-                  {info.coverageDisplay}
-                </span>
-                )
+                <strong>#{formatBigInt(page)}</strong> out of <strong>#{info.pagesDisplay}</strong>
               </h1>
               <div className="summary__progress" role="progressbar" aria-label="Page location within keyspace" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pagePercent}>
                 <div className="summary__progress-fill" style={{ width: `${pagePercent}%` }} />
@@ -460,7 +456,7 @@ export function App() {
           </section>
         ) : null}
 
-        <section className="stats">
+        <section className={`stats${loading || deriving ? ' stats--loading' : ''}`} aria-busy={loading || deriving}>
           <div className="stat">
             <div className="stat__label stat__label--balance">
               <CoinsIcon width={13} height={13} /> Total balance
@@ -470,7 +466,7 @@ export function App() {
               <span className="stat__suffix">XNO</span>
             </div>
             <div className="stat__hint">
-              {totalsKnown ? `${totals.funded} of ${rows.length} entries funded on this page` : 'Balance data unavailable'}
+              {totalsKnown ? `${totals.funded} of ${rows.length} entries funded on this page` : loading || deriving ? 'Loading balances…' : 'Balance data unavailable'}
             </div>
           </div>
           <div className="stat">

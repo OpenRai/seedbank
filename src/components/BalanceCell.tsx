@@ -26,9 +26,9 @@ export function BalanceCell({ state, loading }: BalanceCellProps) {
     if (state) previous.current = state.balanceRaw;
   }, [state]);
 
-  if (loading && !state) {
+  if (loading) {
     return (
-      <div className="cell">
+      <div className="cell" aria-label="Loading account balance and status">
         <span className="skeleton" style={{ width: 96 }} />
         <div className="state state--unopened">
           <span className="skeleton" style={{ width: 70, marginTop: 8 }} />

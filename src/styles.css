@@ -845,16 +845,16 @@ button.chip:hover {
   border-radius: 999px;
   background: linear-gradient(90deg, #eef1f6, #e3e8ef, #eef1f6);
   background-size: 200% 100%;
-  animation: shimmer 1.3s infinite linear;
+  animation: loading-pulse 1.4s infinite ease-in-out;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+.stats--loading .stat__value {
+  animation: loading-pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes loading-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
 }
 
 /* ---------------- Banners / footer ---------------- */
