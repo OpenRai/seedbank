@@ -5,6 +5,7 @@ import { SensitiveValue } from '@components/SensitiveValue';
 import { BalanceCell } from '@components/BalanceCell';
 import { ExternalIcon, CoinsIcon, KeyIcon, SeedIcon } from '@components/Icons';
 import { isNonZeroRaw } from '@lib/format';
+import { downloadCsv } from '@lib/csv';
 
 interface ResultsTableProps {
   kind: 'privateKey' | 'mnemonic';
@@ -14,13 +15,14 @@ interface ResultsTableProps {
   deriving: boolean;
   selectedPosition?: bigint;
   permalink: (entry: bigint) => string;
+  page: bigint;
 }
 
-export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition, permalink }: ResultsTableProps) {
+export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition, permalink, page }: ResultsTableProps) {
   const placeholders = deriving ? Math.max(0, 20 - rows.length) : 0;
 
   return (
-    <div className="results" aria-busy={deriving || loading}>
+    <><div className="table-actions"><button className="btn" type="button" disabled={deriving} onClick={() => downloadCsv(`nano-${kind === 'privateKey' ? 'private-keys' : 'mnemonics'}-page-${page}`, [[kind === 'privateKey' ? 'Private key index' : 'Mnemonic index', kind === 'privateKey' ? 'Private key HEX' : 'Mnemonic', 'Account index', 'Private key HEX', 'Public key HEX', 'Account address', 'Balance raw', 'Receivable raw', 'Opened'], ...rows.map(row => { const state = states.get(row.address); return [row.position, kind === 'privateKey' ? row.privateKeyHex : row.mnemonic, row.accountIndex, row.privateKeyHex, row.publicKeyHex, row.address, state?.balanceRaw, state?.receivableRaw, state?.opened]; })])}>Export as .csv</button></div><div className="results" aria-busy={deriving || loading}>
       <div className="results__head">
         <span className="results__head--key">
           {kind === 'privateKey' ? <KeyIcon width={13} height={13} /> : <SeedIcon width={13} height={13} />}
@@ -63,7 +65,7 @@ export function ResultsTable({ kind, rows, states, loading, deriving, selectedPo
           </div>
         </div>
       ))}
-    </div>
+    </div></>
   );
 }
 
@@ -95,7 +97,7 @@ function ResultRow({
           {kind === 'privateKey' ? 'Private key' : 'Mnemonic'}
           <span className="seed-label__index">#{row.position.toString()}</span>
         </a>
-        {kind === 'privateKey' ? <a className="detail-link" href={`${permalink}&detail=key`}>Details ↗</a> : null}
+        <a className="detail-link" href={`${permalink}&detail=${kind === 'privateKey' ? 'key' : 'mnemonic'}`}>Details ↗</a>
         {kind === 'privateKey' ? (
           <SensitiveValue value={row.privateKeyHex} label="private key" />
         ) : (

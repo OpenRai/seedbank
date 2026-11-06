@@ -15,6 +15,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Native filesystem events can miss edits made through workspace tools.
+    watch: { usePolling: true, interval: 200 },
     proxy: {
       '/api': 'http://localhost:8787',
     },

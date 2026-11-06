@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "seedbank",
+  "project_id": "8239d71b-cdc3-4820-90e0-79e0b5b98550"
+}

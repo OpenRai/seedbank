@@ -6,6 +6,8 @@ import { useAccountStates } from '@hooks/useAccountStates';
 import { CopyButton } from '@components/CopyButton';
 import { KeyIcon, CoinsIcon, WarningIcon } from '@components/Icons';
 import { formatXno } from '@lib/format';
+import { SiteHeader } from './SiteHeader';
+import { SiteFooter } from './SiteFooter';
 
 function valueRow(label: string, value: string, copy = true) {
   return <div className="detail-value"><strong>{label}</strong><code>{value}</code>{copy ? <CopyButton value={value} label={label.toLowerCase()} /> : null}</div>;
@@ -22,11 +24,11 @@ export function PrivateKeyDetail() {
   const [decimal, setDecimal] = useState('');
   useEffect(() => { if (entry !== null) setDecimal(entry.toString(10)); }, [entry]);
 
-  if (!row || entry === null) return <main className="container detail-page"><p>Invalid private key position.</p><a href="/">Return to keyspace</a></main>;
+  if (!row || entry === null) return <><SiteHeader active="keys"/><main className="container detail-page"><p>Invalid private key position.</p><a href="/">Return to keyspace</a></main><SiteFooter/></>;
   const back = writeUrlState({ kind: 'privateKey', page: (entry / 20n) + 1n, options: DEFAULT_OPTIONS, accountIndex: 0, entry }, window.location.search);
   const balance = account?.balanceRaw === null || account?.balanceRaw === undefined ? '—' : `${formatXno(account.balanceRaw)} XNO`;
 
-  return <main className="container detail-page">
+  return <><SiteHeader active="keys"/><main className="container detail-page">
     <div className="breadcrumb"><a href="/">Home</a><span>/</span><span>Nano private key</span></div>
     <h1 className="detail-title"><span>{row.privateKeyHex}</span><span className="chip chip--active">HEX</span></h1>
     <section className="stats detail-stats" aria-busy={loading}>
@@ -44,5 +46,5 @@ export function PrivateKeyDetail() {
       <div className="detail-value"><strong>STATUS</strong><span>{loading ? 'Loading…' : account?.opened ? 'Opened' : account ? 'Unopened' : '—'}</span></div>
     </section>
     <p className="detail-back"><a className="btn" href={back}>← View in keyspace browser</a></p>
-  </main>;
+  </main><SiteFooter/></>;
 }

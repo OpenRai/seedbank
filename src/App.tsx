@@ -517,7 +517,7 @@ export function App() {
           </div>
         ) : null}
 
-        <ResultsTable selectedPosition={selectedPosition} permalink={(entry) => writeUrlState({ kind, page, options: effectiveOptions, accountIndex, entry }, window.location.search)} kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
+        <ResultsTable page={page} selectedPosition={selectedPosition} permalink={(entry) => writeUrlState({ kind, page, options: effectiveOptions, accountIndex, entry }, window.location.search)} kind={kind} rows={rows} states={states} loading={loading} deriving={deriving} />
 
       </main>
 
