@@ -52,3 +52,9 @@ test-results/
 playwright-report/
 playwright/.cache/
 agent-browser-state/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*

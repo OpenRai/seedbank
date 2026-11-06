@@ -95,6 +95,7 @@ function ResultRow({
           {kind === 'privateKey' ? 'Private key' : 'Mnemonic'}
           <span className="seed-label__index">#{row.position.toString()}</span>
         </a>
+        {kind === 'privateKey' ? <a className="detail-link" href={`${permalink}&detail=key`}>Details ↗</a> : null}
         {kind === 'privateKey' ? (
           <SensitiveValue value={row.privateKeyHex} label="private key" />
         ) : (

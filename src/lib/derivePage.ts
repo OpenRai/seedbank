@@ -72,7 +72,11 @@ function bigIntToFixedBytes(value: bigint, length: number): Uint8Array {
   return out;
 }
 
-function privateKeyRow(position: bigint, value: bigint): DerivedRow {
+export function derivePrivateKey(position: bigint): DerivedRow {
+  if (position < 0n || position >= totalEntries('privateKey', { wordCount: 12, method: 'bip39Ledger' })) {
+    throw new RangeError('Private key position out of range');
+  }
+  const value = position;
   const privateKey = bigIntToFixedBytes(value, 32);
   return {
     position,
@@ -107,7 +111,7 @@ export async function derivePage(request: DerivePageRequest): Promise<DerivedRow
     const rows: DerivedRow[] = [];
     for (let i = 0; i < perPage; i++) {
       const position = start + BigInt(i);
-      rows.push(privateKeyRow(position, position & ((1n << 256n) - 1n)));
+      rows.push(derivePrivateKey(position));
     }
     return rows;
   }
