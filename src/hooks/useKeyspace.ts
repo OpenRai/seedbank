@@ -22,6 +22,7 @@ const PER_PAGE = BigInt(PAGE_SIZE);
  */
 export function useKeyspace({ kind, options, page, accountIndex = 0 }: UseKeyspaceArgs) {
   const [rows, setRows] = useState<DerivedRow[]>([]);
+  const [derivedFor, setDerivedFor] = useState<UseKeyspaceArgs | null>(null);
   const [deriving, setDeriving] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
@@ -41,11 +42,13 @@ export function useKeyspace({ kind, options, page, accountIndex = 0 }: UseKeyspa
         .then((result) => {
           if (cancelled || id !== requestId.current) return;
           setRows(result);
+          setDerivedFor({ kind, options, page, accountIndex });
           setError(null);
         })
         .catch((err: unknown) => {
           if (cancelled || id !== requestId.current) return;
           setRows([]);
+          setDerivedFor({ kind, options, page, accountIndex });
           setError(err instanceof Error ? err.message : String(err));
         })
         .finally(() => {
@@ -61,9 +64,14 @@ export function useKeyspace({ kind, options, page, accountIndex = 0 }: UseKeyspa
 
   const commitPage = useCallback((next: bigint) => clampPage(next, pages), [pages]);
 
+  // A new view renders before its derivation effect runs. Never expose the
+  // previous view's entries under the new view's labels or permalink bounds.
+  const matchesRequest = derivedFor?.kind === kind && derivedFor.options === options
+    && derivedFor.page === page && derivedFor.accountIndex === accountIndex;
+
   return {
-    rows,
-    deriving,
+    rows: matchesRequest ? rows : [],
+    deriving: !matchesRequest || deriving,
     error,
     pages,
     info,
