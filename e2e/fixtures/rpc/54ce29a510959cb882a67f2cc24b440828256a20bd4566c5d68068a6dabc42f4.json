@@ -1,0 +1,35 @@
+{
+  "recordedAt": "2026-11-07T10:14:32.293Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_frontiers",
+    "params": {
+      "accounts": [
+        "nano_183ffru98umbiekb3uh17cbojcu3aotqi91dnag7rruterd5ds4nximiywc4",
+        "nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p",
+        "nano_1eo39wsky6ph7ffeza11czjjqtwn5we4adxni84zkdo1cebzdtz1knr7ffj8",
+        "nano_1inhf5h8bi9ecqkaqxno9bs7zkaiakttm4nze9fayzzswm7dah7kuyw51pif",
+        "nano_1jf5tq58ghk3arj9kqgx734o7umwsnfhtjs8qcxzpbqzxnrfhqezzkyon5za",
+        "nano_1jh7upgjga7hpod43n4j9m6hiwiy63aejdcbt7468h9d4f7mts3kto4ogfaf",
+        "nano_1nkwb9wo4ro7zxhy61jzkkimyqdxd9qoqiyy7cg9yi7xwkg9szc6nfw66f5e",
+        "nano_1nmw6ajq3n88dhzbi3wgndipu78ahmdzjxw691wbg9qh47t7iujrsgme3jh4",
+        "nano_1pnah6rh8kp9dhytik7nezkk53991eahtcdc35c481hz69utybqcez5szc7b",
+        "nano_1t97e417bx5eqwkyx41g61917tmwybq8jds47to5o3btnyd31zffxjatmt84",
+        "nano_1tbhmqgqbjatrhkrzcbmzwkscbyipzdmh8aq99u7g5mhomitcaysrqhex5ph",
+        "nano_37uohzu9694ique7815cj4pa39dpwbiseqnws8j1chdbyxnd3houpgp4m84b",
+        "nano_38pfqe749oxofqpiurtwjw3j1ng3kdbdfyek9c15admact6bd1p5sn3pfy5n",
+        "nano_3bubfhzhhnrnfzbabqa7c863wzjysrf59881z1x86nkpftjfface5fa761mp",
+        "nano_3h7ymga5etq4x7qzopo3iw13ztwxgy9t9qmk71qw9w8p1xscodrryxqyrsc4",
+        "nano_3q4pizmmpso9nwfgz33tbkktxqworxsgp7wb95u5piprqtpromcqcynt6os6"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"errors\":{\"nano_183ffru98umbiekb3uh17cbojcu3aotqi91dnag7rruterd5ds4nximiywc4\":\"Account not found\",\"nano_1eo39wsky6ph7ffeza11czjjqtwn5we4adxni84zkdo1cebzdtz1knr7ffj8\":\"Account not found\",\"nano_1inhf5h8bi9ecqkaqxno9bs7zkaiakttm4nze9fayzzswm7dah7kuyw51pif\":\"Account not found\",\"nano_1jf5tq58ghk3arj9kqgx734o7umwsnfhtjs8qcxzpbqzxnrfhqezzkyon5za\":\"Account not found\",\"nano_1jh7upgjga7hpod43n4j9m6hiwiy63aejdcbt7468h9d4f7mts3kto4ogfaf\":\"Account not found\",\"nano_1nkwb9wo4ro7zxhy61jzkkimyqdxd9qoqiyy7cg9yi7xwkg9szc6nfw66f5e\":\"Account not found\",\"nano_1nmw6ajq3n88dhzbi3wgndipu78ahmdzjxw691wbg9qh47t7iujrsgme3jh4\":\"Account not found\",\"nano_1pnah6rh8kp9dhytik7nezkk53991eahtcdc35c481hz69utybqcez5szc7b\":\"Account not found\",\"nano_1t97e417bx5eqwkyx41g61917tmwybq8jds47to5o3btnyd31zffxjatmt84\":\"Account not found\",\"nano_1tbhmqgqbjatrhkrzcbmzwkscbyipzdmh8aq99u7g5mhomitcaysrqhex5ph\":\"Account not found\",\"nano_37uohzu9694ique7815cj4pa39dpwbiseqnws8j1chdbyxnd3houpgp4m84b\":\"Account not found\",\"nano_38pfqe749oxofqpiurtwjw3j1ng3kdbdfyek9c15admact6bd1p5sn3pfy5n\":\"Account not found\",\"nano_3bubfhzhhnrnfzbabqa7c863wzjysrf59881z1x86nkpftjfface5fa761mp\":\"Account not found\",\"nano_3h7ymga5etq4x7qzopo3iw13ztwxgy9t9qmk71qw9w8p1xscodrryxqyrsc4\":\"Account not found\",\"nano_3q4pizmmpso9nwfgz33tbkktxqworxsgp7wb95u5piprqtpromcqcynt6os6\":\"Account not found\"},\"frontiers\":{\"nano_1cy1s7m8hwoun3mhbfafir7xtng6nibu65jxmusarfaoo5g6t9hwkdy7bq5p\":\"E4ED06FB1986F52554EA051F596FBCF295EF73ECE738583DAB504D55A684E3DF\"}},\"id\":1}"
+  },
+  "elapsedMs": 598
+}

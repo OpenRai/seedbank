@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-11-07T10:14:45.641Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_balances",
+    "params": {
+      "accounts": [
+        "nano_113qnqtkdiup14uuazw6m8kgncx61dseqsjs893cdh7arx8mf3bqfx13dxt9",
+        "nano_15fmxxo78scunofkrcpcwkqf5sb57e986drpzem7jzsregs7yknjgjxw3nw3",
+        "nano_1ai98gw337yacpd5x8qx67x4k1efj9uzcbo89whxn8d6hzbyqqnpsqbuj47c",
+        "nano_1kkcmpjksqbxcm73gdepa8spqb4ig7w64bpqqk94ccfgwiu8smetb9inxmta",
+        "nano_1p6hocygi1pzjidi3hho3wn85qiw3ykapg7khu9b45dwf7momgqoytn1c1jz",
+        "nano_1z5yx4t8npzbgofzq6dzp1asnih5qh6hpso6s933u8npy3ssetyz5ghr647c",
+        "nano_33x1iiy9p5uzcqinaz4ajtyka8kwmya7qti6e1t56up3teegsg6i8w15p3dm",
+        "nano_3538g88xsacqhw5i5c7rshecnoa8kxmkn1j9coi1twh8fukf1sdnpynf937p",
+        "nano_36miy3byttbf91mjjassuqq9zy16d8efh3qsh4brbj1t969ededpzxymqm5c",
+        "nano_36pou379y96dkaqq1ppqzh518cumwyecnfpj66xzk6iiyg9pg114ojci3jfz",
+        "nano_38gkginyrik4exhtdj8tdp9jar5wt8nu6bsmwxijgdccmc6wz9fg65q4ejsr",
+        "nano_3azjx8batwxj4edfsc3jzkh7sf1dga8e1cdwtw7w3dh6jkm5dbm1ickbuaic",
+        "nano_3b18i4r4umpcqgfzdgprz1d6eryiaqifd1aumha3358sw5ixw61e4uenjai9",
+        "nano_3d9ozc1ci3zb3gfkydxk64p169gjnr8n845ibgdr4gxpk57uam6tqfdomhas",
+        "nano_3msphqmqzgbsrdz7ka3o671yfwex5ndodsc3hb4mexjiko39qu4cm67ry8jc",
+        "nano_3ou4b1yjus8tont1jkh4annpwb533zu86cytkhwoiyk8c3yra5f1j9gwbmq5",
+        "nano_3whuojh5ncabx3oyb7xape6qqbb387roybt6c3q7e6ngafa8trzdfk4au73k",
+        "nano_3wxwcbxe53acops8ywnknpbpj1znpcbe996415z4jhmst4xnysto8awpbrmh",
+        "nano_3x7krewi4pmbbumgu5pqkwszwounw7uy1w3fpdeuufccwyyyykpa85furt9u",
+        "nano_3y1u3kcuzxqgod8dtbxbds115hswyy14aiu71odarofqx69uz5p4b17hjf1x"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"balances\":{\"nano_113qnqtkdiup14uuazw6m8kgncx61dseqsjs893cdh7arx8mf3bqfx13dxt9\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_15fmxxo78scunofkrcpcwkqf5sb57e986drpzem7jzsregs7yknjgjxw3nw3\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_1ai98gw337yacpd5x8qx67x4k1efj9uzcbo89whxn8d6hzbyqqnpsqbuj47c\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_1kkcmpjksqbxcm73gdepa8spqb4ig7w64bpqqk94ccfgwiu8smetb9inxmta\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_1p6hocygi1pzjidi3hho3wn85qiw3ykapg7khu9b45dwf7momgqoytn1c1jz\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_1z5yx4t8npzbgofzq6dzp1asnih5qh6hpso6s933u8npy3ssetyz5ghr647c\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_33x1iiy9p5uzcqinaz4ajtyka8kwmya7qti6e1t56up3teegsg6i8w15p3dm\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3538g88xsacqhw5i5c7rshecnoa8kxmkn1j9coi1twh8fukf1sdnpynf937p\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_36miy3byttbf91mjjassuqq9zy16d8efh3qsh4brbj1t969ededpzxymqm5c\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_36pou379y96dkaqq1ppqzh518cumwyecnfpj66xzk6iiyg9pg114ojci3jfz\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_38gkginyrik4exhtdj8tdp9jar5wt8nu6bsmwxijgdccmc6wz9fg65q4ejsr\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3azjx8batwxj4edfsc3jzkh7sf1dga8e1cdwtw7w3dh6jkm5dbm1ickbuaic\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3b18i4r4umpcqgfzdgprz1d6eryiaqifd1aumha3358sw5ixw61e4uenjai9\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3d9ozc1ci3zb3gfkydxk64p169gjnr8n845ibgdr4gxpk57uam6tqfdomhas\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3msphqmqzgbsrdz7ka3o671yfwex5ndodsc3hb4mexjiko39qu4cm67ry8jc\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3ou4b1yjus8tont1jkh4annpwb533zu86cytkhwoiyk8c3yra5f1j9gwbmq5\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3whuojh5ncabx3oyb7xape6qqbb387roybt6c3q7e6ngafa8trzdfk4au73k\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3wxwcbxe53acops8ywnknpbpj1znpcbe996415z4jhmst4xnysto8awpbrmh\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3x7krewi4pmbbumgu5pqkwszwounw7uy1w3fpdeuufccwyyyykpa85furt9u\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"},\"nano_3y1u3kcuzxqgod8dtbxbds115hswyy14aiu71odarofqx69uz5p4b17hjf1x\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"}}},\"id\":1}"
+  },
+  "elapsedMs": 402
+}

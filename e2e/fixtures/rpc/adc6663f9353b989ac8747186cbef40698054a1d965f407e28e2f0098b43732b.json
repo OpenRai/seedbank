@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-07T10:13:55.042Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_frontiers",
+    "params": {
+      "accounts": [
+        "nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"frontiers\":{\"nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1\":\"F55FA91724E98155E926F03C13B12D5B15FD0AD41C3179E218B7DC816DEBEAF4\"}},\"id\":1}"
+  },
+  "elapsedMs": 582
+}

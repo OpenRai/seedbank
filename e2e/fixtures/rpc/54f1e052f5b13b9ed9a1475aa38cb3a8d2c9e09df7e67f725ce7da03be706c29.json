@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-11-07T10:14:47.100Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_frontiers",
+    "params": {
+      "accounts": [
+        "nano_13gsw19cikyg5y5rudbzpdsp15k4388f1wgdddtma7yq3yfhyhpx8dhwk6mt",
+        "nano_15gpuxfnbbbxfae3tuyaecag5fd41iru1wsppm7c4aa4kd55515y9hrandk5",
+        "nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1",
+        "nano_1kw33px7u9cq9iuj8tty8xwbbpfghi9ppn5wxh9hojc1cj775rhkgsaynyen",
+        "nano_1mjsts5bo1yf6yaxzbuxmksyuuqhgepe7nbo9uyx6wyycypg96y3iysi5kij",
+        "nano_1qfaarg9mgx99yj5zwwtsstsq8oiqfs87xfk8jm6cmnsrz96xr9btw5h4sae",
+        "nano_33uuid5yixddpny7pum5sd5gtq3gpyhbdsx7cjjxgdxap8a1tjq7ydj8866f",
+        "nano_35cmhf1ootjsuub3hb8ayyewa9q5g8x88cmn8kg6e7m98wzy6bpjhmpakbcf",
+        "nano_37gnjb5otbmikjpdrn9c6ehm9t6zy1furodr3djje6zncw83qah4fmzyh69o",
+        "nano_3818hz898k34g1tbfnyadxdsijp1kw45sesec4y9jmbseu433wwqhckkysb9",
+        "nano_399hgkfiuw7n9f81muj6bk8osy4o1u751dgcpeaj86kobu7ee8mhqhe8nffh",
+        "nano_3cwgdp9z9xh3qmthtteqb68kt9pdm81pzag5w5fhsozcssyj6fugifb43x5f",
+        "nano_3e6nt6si1ijfwg7s8ibhn7we1zx9robdyrjy3czj6qbixqp4j15h58zu3qwq",
+        "nano_3igso7gb9jbtpgjk3j5f4sk3bzm4jpifi9a5t6j63a3gbsxgs63wm4cxkpyd",
+        "nano_3n8xnabdtkanhpbp5i5md1ixopmyp8q7do1j3e83wh1h9rekhgi8uwhegyue",
+        "nano_3rq9qj3frh8xhjrqzodjfu4rh5foi4u688fxojdnfn9ew1gxhhnp3n36917o",
+        "nano_3rwmum37gkr5y1w9h81zyxi96h4t9c8337bc89um9u3rsy8ndcx6nc3fj95x",
+        "nano_3w9oef7jiiyii7sq6g6ike1w6yytitye4x6kockka1iqdamsn81ny5cj87hc",
+        "nano_3ydzzx9m7bs85gfm8cghjbm1xcc774pp6ai3nddjaw13kmq9zf5y8rmqt98u",
+        "nano_3zs6p916hn31yyrp8u7eaqfrwywbupkq66rmh8rummofry4o83b5fxwbz89m"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"frontiers\":{\"nano_13gsw19cikyg5y5rudbzpdsp15k4388f1wgdddtma7yq3yfhyhpx8dhwk6mt\":\"B301C1A778656B07D13C840BB4EDE9068AEB8655DE79B4A71B2EDE7075D1F9F6\",\"nano_15gpuxfnbbbxfae3tuyaecag5fd41iru1wsppm7c4aa4kd55515y9hrandk5\":\"6CB5A14C48F2492663237AC6963829F40611ACAE41DA27277999BC94F3750F92\",\"nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1\":\"F55FA91724E98155E926F03C13B12D5B15FD0AD41C3179E218B7DC816DEBEAF4\",\"nano_1kw33px7u9cq9iuj8tty8xwbbpfghi9ppn5wxh9hojc1cj775rhkgsaynyen\":\"C21CB3EF09802D1BD598D6AD765A8A0EAB6420004F5F1E770B97627F23027F9A\",\"nano_1mjsts5bo1yf6yaxzbuxmksyuuqhgepe7nbo9uyx6wyycypg96y3iysi5kij\":\"71BE71589B1EE376658B6C27018CE2C4D5B379FAC48000C53C48CB6790E8EE6A\",\"nano_1qfaarg9mgx99yj5zwwtsstsq8oiqfs87xfk8jm6cmnsrz96xr9btw5h4sae\":\"879BBAFB6142E71C9AE1691CE057C0B6A657B1833A9429EFEC6F18B613BCC8A3\",\"nano_33uuid5yixddpny7pum5sd5gtq3gpyhbdsx7cjjxgdxap8a1tjq7ydj8866f\":\"B457964DC7BCB20E3ADF9253A117FD8D9EA821CD75CB219AB9E44BE9A1116257\",\"nano_35cmhf1ootjsuub3hb8ayyewa9q5g8x88cmn8kg6e7m98wzy6bpjhmpakbcf\":\"74E78E02539A162DD2AA21B4577DDDDC7765E015C1F8D8B242610773DC41EFEC\",\"nano_37gnjb5otbmikjpdrn9c6ehm9t6zy1furodr3djje6zncw83qah4fmzyh69o\":\"99D554E58556A2B2D17987973BAB1473C429213AB96623566E78869F7C88C7F8\",\"nano_3818hz898k34g1tbfnyadxdsijp1kw45sesec4y9jmbseu433wwqhckkysb9\":\"3EE5438E9FE7BD42D408DCE99D5509C0609EE86A9956E0CAA9F08492D751299F\",\"nano_399hgkfiuw7n9f81muj6bk8osy4o1u751dgcpeaj86kobu7ee8mhqhe8nffh\":\"51A5A40256C6AF173F7A1185730DD25DA48AA9E53CE1498B7E9DAA4B78757E99\",\"nano_3cwgdp9z9xh3qmthtteqb68kt9pdm81pzag5w5fhsozcssyj6fugifb43x5f\":\"EB442E2880C69E74563D0FE090F4878C38A73D7B2E9E921646889571F31936F1\",\"nano_3e6nt6si1ijfwg7s8ibhn7we1zx9robdyrjy3czj6qbixqp4j15h58zu3qwq\":\"5CFA82E95B665F32AFFF8AFC5DB2B1B1251BACD867B88ADB49F83DDFD8D93488\",\"nano_3igso7gb9jbtpgjk3j5f4sk3bzm4jpifi9a5t6j63a3gbsxgs63wm4cxkpyd\":\"C554EEBFB99E25309F17C9EA2F766DE38D48E6CA1BAB85CE9D6E44D287EFC8A0\",\"nano_3n8xnabdtkanhpbp5i5md1ixopmyp8q7do1j3e83wh1h9rekhgi8uwhegyue\":\"C22B8AC029BF43CA68761061ADD1E1D7CC0FB4C96728ED04D751C04373D90BFD\",\"nano_3rq9qj3frh8xhjrqzodjfu4rh5foi4u688fxojdnfn9ew1gxhhnp3n36917o\":\"72FFE72EDDDBFB86CAD9952CC6DF9DACA14BE2991360E403D38BF321A13C3D12\",\"nano_3rwmum37gkr5y1w9h81zyxi96h4t9c8337bc89um9u3rsy8ndcx6nc3fj95x\":\"DA370205C985F001E811DD798C4EF260E347CA4ACB01D7BDDBA24EEA4F5730DF\",\"nano_3w9oef7jiiyii7sq6g6ike1w6yytitye4x6kockka1iqdamsn81ny5cj87hc\":\"52CAD402926019A1107D8A6B38C407F25CD449BCCC7A84839EF2B6E26ACCD583\",\"nano_3ydzzx9m7bs85gfm8cghjbm1xcc774pp6ai3nddjaw13kmq9zf5y8rmqt98u\":\"53F6589235B26E8A6E62E64A379C05481A52C80DBC5C7C77EF9A336EA907C938\",\"nano_3zs6p916hn31yyrp8u7eaqfrwywbupkq66rmh8rummofry4o83b5fxwbz89m\":\"29473330CC43CC606A1C165FAE7BBE7F18FD1FCBB3675F849FD4A3925843E0B2\"}},\"id\":1}"
+  },
+  "elapsedMs": 596
+}

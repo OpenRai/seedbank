@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-07T10:13:42.888Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_frontiers",
+    "params": {
+      "accounts": [
+        "nano_3ijdu3unhrnnqbxxh4jgrc5rmuqd4bkt6ncqq8yx9t84czej3khpjgjnriqn"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"errors\":{\"nano_3ijdu3unhrnnqbxxh4jgrc5rmuqd4bkt6ncqq8yx9t84czej3khpjgjnriqn\":\"Account not found\"}},\"id\":1}"
+  },
+  "elapsedMs": 396
+}

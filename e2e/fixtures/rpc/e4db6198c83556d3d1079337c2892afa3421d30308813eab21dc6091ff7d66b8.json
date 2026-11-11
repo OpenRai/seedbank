@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-11-07T10:13:54.855Z",
+  "endpoint": "https://dev-rpc.nanosweeper.lol/rpc",
+  "request": {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "accounts_balances",
+    "params": {
+      "accounts": [
+        "nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1"
+      ]
+    }
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": "{\"jsonrpc\":\"2.0\",\"result\":{\"balances\":{\"nano_1bmnghiwz3aez1ffbsocwddpyj4gd1ikuzenpb6c1bbk6ahq91y6ro57axe1\":{\"balance\":\"0\",\"balance_nano\":\"0\",\"pending\":\"0\",\"pending_nano\":\"0\",\"receivable\":\"0\",\"receivable_nano\":\"0\"}}},\"id\":1}"
+  },
+  "elapsedMs": 394
+}

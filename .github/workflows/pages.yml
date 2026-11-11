@@ -3,6 +3,7 @@ name: Publish GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -24,15 +25,26 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
+      - run: npm test
       - run: npm run build
         env:
           VITE_LOOKUPS: ${{ vars.VITE_LOOKUPS || 'nano-rpc' }}
           VITE_NANO_RPC_URLS: ${{ vars.VITE_NANO_RPC_URLS }}
-          VITE_JSON_RPC_URL: ${{ vars.VITE_JSON_RPC_URL }}
+          VITE_JSON_RPC_URL: ${{ vars.VITE_JSON_RPC_URL || 'https://dev-rpc.nanosweeper.lol/rpc' }}
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-failures
+          path: |
+            playwright-report/
+            test-results/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
