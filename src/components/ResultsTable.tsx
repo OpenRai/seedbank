@@ -16,9 +16,24 @@ interface ResultsTableProps {
   selectedPosition?: bigint;
   permalink: (entry: bigint) => string;
   page: bigint;
+  /** Show each mnemonic's derived private key below the phrase. */
+  showPrivateKey?: boolean;
+  /** Render the per-row "Details" link. */
+  showDetailLink?: boolean;
 }
 
-export function ResultsTable({ kind, rows, states, loading, deriving, selectedPosition, permalink, page }: ResultsTableProps) {
+export function ResultsTable({
+  kind,
+  rows,
+  states,
+  loading,
+  deriving,
+  selectedPosition,
+  permalink,
+  page,
+  showPrivateKey = false,
+  showDetailLink = true,
+}: ResultsTableProps) {
   const placeholders = deriving ? Math.max(0, 20 - rows.length) : 0;
 
   return (
@@ -49,6 +64,8 @@ export function ResultsTable({ kind, rows, states, loading, deriving, selectedPo
           selected={row.position === selectedPosition}
           state={states.get(row.address)}
           loading={loading}
+          showPrivateKey={showPrivateKey}
+          showDetailLink={showDetailLink}
         />
       ))}
 
@@ -76,6 +93,8 @@ function ResultRow({
   loading,
   selected,
   permalink,
+  showPrivateKey,
+  showDetailLink,
 }: {
   kind: 'privateKey' | 'mnemonic';
   row: DerivedRow;
@@ -83,6 +102,8 @@ function ResultRow({
   permalink: string;
   state: AccountState | undefined;
   loading: boolean;
+  showPrivateKey: boolean;
+  showDetailLink: boolean;
 }) {
   const funded = state !== undefined && isNonZeroRaw(state.balanceRaw);
   // Left indicator semantics: golden for a positive balance, green for an
@@ -97,11 +118,21 @@ function ResultRow({
           {kind === 'privateKey' ? 'Private key' : 'Mnemonic'}
           <span className="seed-label__index">#{row.position.toString()}</span>
         </a>
-        <a className="detail-link" href={`${permalink}&detail=${kind === 'privateKey' ? 'key' : 'mnemonic'}`}>Details ↗</a>
+        {showDetailLink ? (
+          <a className="detail-link" href={`${permalink}&detail=${kind === 'privateKey' ? 'key' : 'mnemonic'}`}>Details ↗</a>
+        ) : null}
         {kind === 'privateKey' ? (
           <SensitiveValue value={row.privateKeyHex} label="private key" />
         ) : (
-          <SensitiveValue value={row.mnemonic ?? ''} label="mnemonic phrase" wordWrap />
+          <>
+            <SensitiveValue value={row.mnemonic ?? ''} label="mnemonic phrase" wordWrap />
+            {showPrivateKey ? (
+              <div className="row__secondary">
+                <div className="seed-label">Private key</div>
+                <SensitiveValue value={row.privateKeyHex} label="private key" />
+              </div>
+            ) : null}
+          </>
         )}
         {row.path ? <div className="path">{row.path}</div> : null}
       </div>

